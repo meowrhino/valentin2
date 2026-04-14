@@ -2,7 +2,8 @@
    LIGHTBOX — Fullscreen image viewer
    Opens with animation: image flies from scroll position to center.
    Closes with animation: image flies back to scroll position.
-   Arrow keys navigate, X buttons or click to close.
+   Arrow keys navigate. Closes on X buttons, click image,
+   click backdrop (outside image), or ESC.
    ============================================ */
 
 const Lightbox = (() => {
@@ -159,6 +160,10 @@ const Lightbox = (() => {
   function init() {
     closeButtons.forEach(function(btn) { btn.addEventListener('click', closeLightbox); });
     img.addEventListener('click', closeLightbox);
+    // Close when clicking backdrop (dark area outside the image)
+    el.addEventListener('click', function(e) {
+      if (e.target === el) closeLightbox();
+    });
 
     document.addEventListener('keydown', function(e) {
       if (!_isOpen) return;

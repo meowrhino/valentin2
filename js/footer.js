@@ -34,7 +34,9 @@ const Footer = (() => {
   function updateActiveProject(nombre) {
     if (App.state.view === 'home' && App.state.mode === 'commercial' && App.state.category === 'all' && nombre) {
       centerBtn.textContent = nombre.toUpperCase();
-      centerBtn.onclick = null;
+      centerBtn.onclick = function() {
+        ProjectNav.open(App.state.activeProjectSlug);
+      };
     }
   }
 

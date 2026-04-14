@@ -177,10 +177,10 @@ const ScrollView = (() => {
 
     marquee.appendChild(track);
 
-    // Click marquee → open project navigation overlay
+    // Marquee click — enter the project directly
     marquee.addEventListener('click', (e) => {
       e.stopPropagation();
-      ProjectNav.open(slug);
+      App.enterProject(slug);
     });
 
     return marquee;

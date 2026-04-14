@@ -365,7 +365,39 @@ button {
   justify-content: center;
 }
 
-.project-nav--hidden { display: none; }
+.project-nav--hidden {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.project-nav--hidden .project-nav__backdrop {
+  opacity: 0;
+}
+
+.project-nav--hidden .project-nav__content {
+  transform: translateY(100vh);
+  opacity: 0;
+}
+
+/* Close buttons — 4 corners */
+.project-nav__close {
+  position: absolute;
+  font-size: 1.5rem;
+  font-weight: 300;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  padding: 16px;
+  z-index: 2;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.project-nav__close:hover { opacity: 1; }
+
+.project-nav__close--tl { top: 0; left: 0; }
+.project-nav__close--tr { top: 0; right: 0; }
+.project-nav__close--bl { bottom: 0; left: 0; }
+.project-nav__close--br { bottom: 0; right: 0; }
 
 .project-nav__backdrop {
   position: absolute;
@@ -381,8 +413,8 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  padding: 3rem 4rem;
+  gap: 0.3rem;
+  padding: 2.5rem 4rem;
   z-index: 1;
   max-height: 80vh;
   overflow-y: auto;
@@ -401,14 +433,42 @@ button {
   opacity: 0;
 }
 
+.project-nav__mode-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.project-nav__mode-label {
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.project-nav__arrow {
+  font-weight: 300;
+  font-size: 0.9rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  padding: 4px 8px;
+  letter-spacing: 0.15em;
+}
+
+.project-nav__arrow:hover {
+  opacity: 1;
+}
+
 .project-nav__item {
   font-weight: 300;
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   opacity: 0.5;
-  transition: opacity 0.2s, color 0.2s, font-weight 0.2s;
-  padding: 4px 0;
+  transition: opacity 0.2s, color 0.2s;
+  padding: 2px 0;
   white-space: nowrap;
 }
 
@@ -418,7 +478,6 @@ button {
 }
 
 .project-nav__item--active {
-  font-weight: 800;
   opacity: 1;
   color: var(--nav-color, #fff);
 }

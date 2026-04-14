@@ -64,6 +64,7 @@ const App = (() => {
     // Show first project name in footer on initial load
     if (state.projects.length) {
       var first = state.projects[0];
+      state.activeProjectSlug = first.slug;
       Footer.updateActiveProject(first.nombre);
       ColorWipe.setColor(first.color);
     }
