@@ -1,0 +1,664 @@
+/* ============================================
+   VALENTIN2 — Teletext + Dark Mode Portfolio
+   ============================================ */
+
+:root {
+  --header-h: 48px;
+  --footer-h: 48px;
+
+  --color-bg: #000;
+  --color-text: #fff;
+  --color-club: #39FF14;
+  --color-festival: #FF6EC7;
+  --color-editorial: #00FFFF;
+  --color-active: #fff;
+
+  --transition-speed: 0.4s;
+  --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- RESET ---- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Saira Condensed', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+/* ============================================
+   LAYERS (z-index)
+   ============================================ */
+
+#motifs-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scroll-host {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: var(--footer-h);
+  z-index: 2;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#header, #footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  background: var(--color-bg);
+}
+
+.transition-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+#header {
+  top: 0;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--color-text);
+  transition: border-color var(--transition-speed) var(--transition-ease);
+}
+
+.header__left {
+  flex: 1;
+}
+
+#header-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color var(--transition-speed) var(--transition-ease);
+}
+
+.header__center {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-toggle {
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  transition: opacity 0.2s, color var(--transition-speed) var(--transition-ease);
+}
+
+.mode-toggle:hover {
+  opacity: 1;
+}
+
+.header__right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.menu-toggle {
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.menu-toggle:hover {
+  opacity: 1;
+}
+
+/* Header marquee (project view) */
+.header__marquee {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  background: var(--color-bg);
+  overflow: hidden;
+  transition: opacity var(--transition-speed) var(--transition-ease);
+}
+
+.header__marquee--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.marquee__track {
+  display: flex;
+  white-space: nowrap;
+  animation: marquee-scroll 30s linear infinite;
+}
+
+.marquee__text {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding-right: 3em;
+}
+
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ============================================
+   FOOTER (only arrows)
+   ============================================ */
+
+#footer {
+  bottom: 0;
+  height: var(--footer-h);
+}
+
+.footer__nav {
+  height: var(--footer-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-top: 1px solid var(--color-text);
+  transition: border-color var(--transition-speed) var(--transition-ease);
+}
+
+.footer__arrow {
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s, color var(--transition-speed) var(--transition-ease);
+  padding: 0 12px;
+  line-height: 1;
+}
+
+.footer__arrow:hover {
+  opacity: 1;
+}
+
+.footer__project-name {
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  transition: opacity 0.2s, color 0.4s ease;
+  color: var(--project-color, #fff);
+}
+
+.footer__project-name:hover {
+  opacity: 1;
+}
+
+/* ============================================
+   MENU MODAL
+   ============================================ */
+
+.menu-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-modal--hidden {
+  pointer-events: none;
+}
+
+.menu-modal--hidden .menu-modal__backdrop {
+  opacity: 0;
+}
+
+.menu-modal--hidden .menu-modal__content {
+  transform: translateY(100vh);
+}
+
+.menu-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  transition: opacity 0.3s ease;
+}
+
+.menu-modal__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 3rem 4rem;
+  z-index: 1;
+  border: 1px solid var(--project-color, #fff);
+  background: var(--color-bg);
+  /* Boing: bounce overshoot on open, dip-then-exit on close */
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* When closing: different easing (dip down first, then fly up) */
+.menu-modal--closing .menu-modal__content {
+  transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05);
+  transform: translateY(-100vh);
+}
+
+.menu-modal__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 1.5rem;
+  font-weight: 300;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  padding: 8px;
+}
+
+.menu-modal__close:hover {
+  opacity: 1;
+}
+
+.menu-modal__section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.menu-modal__divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0.5rem 0;
+}
+
+.menu-modal__item {
+  font-weight: 300;
+  font-size: 1.1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  transition: opacity 0.2s, font-weight 0.2s;
+  padding: 4px 0;
+}
+
+.menu-modal__item:hover {
+  opacity: 0.8;
+}
+
+.menu-modal__item--active {
+  font-weight: 800;
+  opacity: 1;
+}
+
+.menu-modal__dot {
+  font-size: 0.6rem;
+  margin-right: 0.3em;
+}
+
+/* ============================================
+   SCROLL CONTENT — HOME
+   ============================================ */
+
+.scroll-item {
+  width: 100%;
+  position: relative;
+  cursor: pointer;
+}
+
+.scroll-item__img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  height: 75dvh;
+  background: #111;
+  transition: opacity 0.3s;
+}
+
+.scroll-item__img[data-src] {
+  opacity: 0;
+}
+
+.scroll-item__img.loaded {
+  opacity: 1;
+}
+
+/* ---- Project group wrapper ---- */
+.project-group {
+  transition: max-height 0.6s ease, opacity 0.4s ease;
+  overflow: hidden;
+}
+
+.project-group--collapsed {
+  max-height: 0 !important;
+  opacity: 0;
+}
+
+/* ---- Scroll marquee (createTitleText) — BIG + ITALIC ---- */
+.scroll-marquee {
+  width: 100%;
+  overflow: hidden;
+  padding: 20px 0;
+  cursor: pointer;
+  transition: padding 0.3s var(--transition-ease);
+}
+
+.scroll-marquee__track {
+  display: flex;
+  white-space: nowrap;
+}
+
+.scroll-marquee__text {
+  font-weight: 800;
+  font-style: italic;
+  font-size: 3.5rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding-right: 1em;
+  transition: font-weight 0.3s var(--transition-ease);
+}
+
+/* Marquee animation variants */
+/* v1: LTR normal, v2: RTL normal, v3: LTR slow, v4: RTL fast */
+.scroll-marquee--v1 .scroll-marquee__track { animation: marquee-ltr 14s linear infinite; }
+.scroll-marquee--v2 .scroll-marquee__track { animation: marquee-rtl 14s linear infinite; }
+.scroll-marquee--v3 .scroll-marquee__track { animation: marquee-ltr 22s linear infinite; }
+.scroll-marquee--v4 .scroll-marquee__track { animation: marquee-rtl 8s linear infinite; }
+
+@keyframes marquee-ltr {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes marquee-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Marquee collapsed state */
+.scroll-marquee--paused {
+  padding: 24px 0;
+}
+
+.scroll-marquee--paused .scroll-marquee__track {
+  animation-play-state: paused;
+}
+
+.scroll-marquee--paused .scroll-marquee__text {
+  font-weight: 800;
+}
+
+/* ============================================
+   PROJECT VIEW
+   ============================================ */
+
+.project-host--hidden {
+  display: none;
+}
+
+.project-item {
+  width: 100%;
+}
+
+.project-item__img {
+  width: 100%;
+  display: block;
+  object-fit: contain;
+  background: var(--color-bg);
+}
+
+.project-item__img[data-src] {
+  opacity: 0;
+}
+
+.project-item__img.loaded {
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+
+/* Text content item */
+.project-item--text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.project-item__text {
+  font-weight: 300;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  text-align: center;
+  max-width: 600px;
+}
+
+/* Audio content item */
+.project-item--audio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--color-text);
+  padding: 12px 20px;
+  border-radius: 0;
+}
+
+.audio-player__btn {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.audio-player__btn:hover {
+  opacity: 1;
+}
+
+.audio-player__time {
+  font-weight: 300;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+}
+
+/* Ficha técnica */
+.ficha {
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-height: 60dvh;
+  justify-content: center;
+}
+
+.ficha__title {
+  font-weight: 800;
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.ficha__row {
+  display: flex;
+  gap: 0.5em;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.ficha__label {
+  font-weight: 300;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+.ficha__value {
+  font-weight: 400;
+}
+
+.ficha__team {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  font-weight: 300;
+  opacity: 0.6;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ============================================
+   TRANSITION GRID (8x8)
+   ============================================ */
+
+.transition-grid__cell {
+  background: var(--color-bg);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+/* ============================================
+   MOTIFS (floating background — screensaver style)
+   ============================================ */
+
+.motif {
+  position: fixed;
+  pointer-events: none;
+  filter: invert(1);
+  z-index: 1;
+  /* Use transform for GPU-only animation, no repaints */
+  will-change: transform;
+}
+
+/* Screensaver-style: fixed pixel offsets for GPU compositing */
+@keyframes screensaver-1 {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(200px, 150px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes screensaver-2 {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(-180px, 200px) rotate(45deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes screensaver-3 {
+  0%   { transform: translate(0, 0); }
+  33%  { transform: translate(250px, -100px); }
+  66%  { transform: translate(-100px, 200px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes screensaver-4 {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(-200px, 250px) rotate(30deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* ============================================
+   PER-PROJECT COLOR THEMING (via CSS custom property)
+   ============================================ */
+
+/* The active project color is set via JS on body: --project-color */
+#header {
+  border-color: var(--project-color, #fff);
+}
+
+.footer__nav {
+  border-color: var(--project-color, #fff);
+}
+
+#header-name,
+.footer__arrow,
+.menu-toggle,
+.mode-toggle {
+  color: var(--project-color, #fff);
+  transition: color 0.4s ease;
+}
+
+/* ============================================
+   WIPE OVERLAYS
+   ============================================ */
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+
+  .footer__arrow {
+    font-size: 1.3rem;
+  }
+
+  .scroll-marquee__text {
+    font-size: 2.5rem;
+  }
+
+  .project-item__text {
+    font-size: 0.95rem;
+    padding: 1.5rem;
+  }
+
+  .menu-modal__content {
+    padding: 2rem 3rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .scroll-item__img {
+    height: 80dvh;
+  }
+}
