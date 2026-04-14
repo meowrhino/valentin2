@@ -14,14 +14,22 @@ const Menu = (() => {
   const closeButtons = menuModal.querySelectorAll('.menu-modal__close');
 
   function open() {
-    // Sync active states
+    // Sync active states — about is active when viewing the about project
+    var isAbout = App.state.view === 'project' &&
+      App.state.data && App.state.data.about &&
+      App.state.activeProjectSlug === App.state.data.about.slug;
+
     modeItems.forEach(item => {
-      item.classList.toggle('menu-modal__item--active', item.dataset.mode === App.state.mode);
+      if (item.dataset.mode === 'about') {
+        item.classList.toggle('menu-modal__item--active', isAbout);
+      } else {
+        item.classList.toggle('menu-modal__item--active', !isAbout && item.dataset.mode === App.state.mode);
+      }
     });
     catItems.forEach(item => {
       item.classList.toggle('menu-modal__item--active', item.dataset.category === App.state.category);
     });
-    menuCategories.style.display = App.state.mode === 'personal' ? 'none' : '';
+    menuCategories.style.display = (App.state.mode === 'personal' || isAbout) ? 'none' : '';
 
     // Sync motif buttons
     const currentMotif = Settings.get('motifStyle');
@@ -63,7 +71,23 @@ const Menu = (() => {
     modeItems.forEach(item => {
       item.addEventListener('click', () => {
         const mode = item.dataset.mode;
-        if (mode !== App.state.mode) {
+
+        // ABOUT navigates to about project and closes menu
+        if (mode === 'about') {
+          if (App.state.data && App.state.data.about) {
+            // Si ya estamos en about, solo cerrar menú
+            if (App.state.view === 'project' && App.state.activeProjectSlug === App.state.data.about.slug) {
+              close();
+              return;
+            }
+            close();
+            App.enterProject(App.state.data.about.slug);
+          }
+          return;
+        }
+
+        // Switch mode, or return to home if in project view
+        if (mode !== App.state.mode || App.state.view === 'project') {
           App.state.mode = mode;
           App.state.category = 'all';
           App.state.collapsedProjects.clear();
@@ -72,6 +96,7 @@ const Menu = (() => {
           menuCategories.style.display = mode === 'personal' ? 'none' : '';
           catItems.forEach(ci => ci.classList.toggle('menu-modal__item--active', ci.dataset.category === 'all'));
 
+          close();
           App.rebuildHome();
           Header.updateForHome();
         }

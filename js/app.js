@@ -40,6 +40,7 @@ const App = (() => {
     Menu.init();
     Footer.init();
     Lightbox.init();
+    ProjectNav.init();
     Motifs.init();
     Transitions.buildGrid();
 
@@ -59,6 +60,14 @@ const App = (() => {
 
     updateProjects();
     showHome();
+
+    // Show first project name in footer on initial load
+    if (state.projects.length) {
+      var first = state.projects[0];
+      Footer.updateActiveProject(first.nombre);
+      ColorWipe.setColor(first.color);
+    }
+
     hideLoader();
   }
 
@@ -230,6 +239,14 @@ const App = (() => {
 
   function rebuildHome() {
     Transitions.wipe(function() {
+      // Return to home if in project view
+      if (state.view === 'project') {
+        state.view = 'home';
+        state.activeProjectSlug = null;
+        ProjectView.hide();
+        ScrollView.show();
+        history.pushState({ view: 'home' }, '', Utils.BASE + '/');
+      }
       state.collapsedProjects.clear();
       updateProjects();
       ScrollView.init(state.projects, state.config);

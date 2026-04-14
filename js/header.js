@@ -12,6 +12,7 @@ const Header = (() => {
 
   function updateForHome() {
     nameEl.textContent = 'VALENTIN BARRIO';
+    nameEl.classList.remove('bar__name--active');
     const cat = App.state.category === 'all'
       ? (App.state.mode === 'commercial' ? 'ALL' : 'PERSONAL')
       : App.state.category.toUpperCase();
@@ -21,7 +22,10 @@ const Header = (() => {
   function updateForProject() {
     nameEl.textContent = 'VALENTIN BARRIO';
     const slug = App.state.activeProjectSlug;
-    if (App.state.data && App.state.data.about && App.state.data.about.slug === slug) {
+    var isAbout = App.state.data && App.state.data.about && App.state.data.about.slug === slug;
+    nameEl.classList.toggle('bar__name--active', isAbout);
+    nameEl.style.cursor = isAbout ? 'default' : 'pointer';
+    if (isAbout) {
       categoryEl.textContent = 'ABOUT';
     } else {
       const proj = App.findProject(slug);
@@ -68,10 +72,15 @@ const Header = (() => {
 
     // VALENTIN BARRIO click → go to about
     nameEl.addEventListener('click', () => {
+      // Si estamos en about, no hacer nada (es solo texto)
+      var isAbout = App.state.data && App.state.data.about &&
+        App.state.view === 'project' &&
+        App.state.activeProjectSlug === App.state.data.about.slug;
+      if (isAbout) return;
+
       if (App.state.view === 'project') {
         App.exitProject();
       }
-      // Navigate to about section
       if (App.state.data && App.state.data.about) {
         App.enterProject(App.state.data.about.slug);
       }

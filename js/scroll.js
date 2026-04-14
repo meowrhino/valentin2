@@ -177,10 +177,10 @@ const ScrollView = (() => {
 
     marquee.appendChild(track);
 
-    // Click marquee → enter project (not toggle accordion)
+    // Click marquee → open project navigation overlay
     marquee.addEventListener('click', (e) => {
       e.stopPropagation();
-      App.enterProject(slug);
+      ProjectNav.open(slug);
     });
 
     return marquee;

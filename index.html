@@ -81,6 +81,7 @@
       <div class="menu-modal__section">
         <button class="menu-modal__item menu-modal__item--active" data-mode="commercial">COMERCIAL</button>
         <button class="menu-modal__item" data-mode="personal">PERSONAL</button>
+        <button class="menu-modal__item" data-mode="about">ABOUT</button>
       </div>
       <div class="menu-modal__section" id="menu-categories">
         <button class="menu-modal__item menu-modal__item--active" data-category="all">ALL</button>
@@ -106,6 +107,12 @@
   <!-- Z-10: Transition grid overlay (content area only) -->
   <div id="transition-grid" class="transition-grid"></div>
 
+  <!-- Z-25: Project navigation overlay -->
+  <div id="project-nav" class="project-nav project-nav--hidden">
+    <div class="project-nav__backdrop"></div>
+    <div class="project-nav__content"></div>
+  </div>
+
   <script defer src="js/utils.js"></script>
   <script defer src="js/color-wipe.js"></script>
   <script defer src="js/motifs.js"></script>
@@ -115,6 +122,7 @@
   <script defer src="js/menu.js"></script>
   <script defer src="js/footer.js"></script>
   <script defer src="js/lightbox.js"></script>
+  <script defer src="js/project-nav.js"></script>
   <script defer src="js/scroll.js"></script>
   <script defer src="js/project.js"></script>
   <script defer src="js/app.js"></script>
