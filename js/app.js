@@ -134,14 +134,14 @@ const App = (() => {
     };
 
     if (withTransition) {
-      Transitions.run(doEnter);
+      Transitions.go(doEnter);
     } else {
       doEnter();
     }
   }
 
   function exitProject() {
-    Transitions.run(function() {
+    Transitions.go(function() {
       state.view = 'home';
       ProjectView.hide();
       ScrollView.show();
@@ -153,7 +153,7 @@ const App = (() => {
   }
 
   function toggleMode() {
-    Transitions.wipe(function() {
+    Transitions.go(function() {
       state.mode = state.mode === 'commercial' ? 'personal' : 'commercial';
       state.category = 'all';
       state.collapsedProjects.clear();
@@ -166,7 +166,7 @@ const App = (() => {
   }
 
   function setCategory(cat) {
-    Transitions.wipe(function() {
+    Transitions.go(function() {
       state.category = cat;
       state.collapsedProjects.clear();
       updateProjects();
@@ -183,7 +183,7 @@ const App = (() => {
     var idx = filtered.findIndex(function(p) { return p.slug === state.activeProjectSlug; });
     if (idx > 0) {
       var prev = filtered[idx - 1];
-      Transitions.run(function() {
+      Transitions.go(function() {
         ProjectView.hide();
         var proj = findProject(prev.slug);
         state.activeProjectSlug = prev.slug;
@@ -201,7 +201,7 @@ const App = (() => {
     var idx = filtered.findIndex(function(p) { return p.slug === state.activeProjectSlug; });
     if (idx < filtered.length - 1) {
       var next = filtered[idx + 1];
-      Transitions.run(function() {
+      Transitions.go(function() {
         ProjectView.hide();
         var proj = findProject(next.slug);
         state.activeProjectSlug = next.slug;
@@ -238,7 +238,7 @@ const App = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   function rebuildHome() {
-    Transitions.wipe(function() {
+    Transitions.go(function() {
       // Return to home if in project view
       if (state.view === 'project') {
         state.view = 'home';

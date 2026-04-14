@@ -1,14 +1,15 @@
 /* ============================================
    TRANSITIONS — 8x8 Grid + Horizontal wipe
 
-   Two transition types:
+   Two transition types (controlled by TRANSITION_STYLE toggle):
 
    1. GRID (run): 64 cells (8×8) that fade in randomly to black,
       then fade out randomly to reveal the new content.
-      Used for project enter/exit/prev/next navigation.
 
    2. WIPE (wipe): Horizontal left-to-right color sweep.
-      Used for mode and category changes.
+
+   By default TRANSITION_STYLE = 'grid', so all page changes
+   use the 8×8 grid. Change to 'wipe' to use the sweep instead.
 
    GRID MODE TOGGLE — FULLSCREEN_GRID
    ───────────────────────────────────
@@ -33,6 +34,12 @@ const Transitions = (() => {
 
   // ── TOGGLE: set to true for full-viewport grid (covers header/footer) ──
   const FULLSCREEN_GRID = false;
+
+  // ── TOGGLE: Transition style for all page changes ──
+  // 'grid' = 8x8 random cell grid (default)
+  // 'wipe' = horizontal left-to-right sweep
+  // To switch to wipe: change 'grid' to 'wipe'
+  const TRANSITION_STYLE = 'grid';
 
   const CELLS = 64;           // 8×8 grid
   const STAGGER_MS = 8;       // delay between each cell's blackout start
@@ -184,5 +191,10 @@ const Transitions = (() => {
     });
   }
 
-  return { run, wipe, buildGrid };
+  // Unified entry point — uses whichever style TRANSITION_STYLE selects
+  function go(callback) {
+    return TRANSITION_STYLE === 'wipe' ? wipe(callback) : run(callback);
+  }
+
+  return { run, wipe, go, buildGrid };
 })();

@@ -1,6 +1,8 @@
 /* ============================================
    MENU — Modal with mode/category switching
    Always enters from bottom, closes with "carrerilla" up.
+   Menu never auto-closes on item click — only via
+   close buttons (X), backdrop click, or ESC.
    Category hover changes text color only.
    ============================================ */
 
@@ -72,15 +74,14 @@ const Menu = (() => {
       item.addEventListener('click', () => {
         const mode = item.dataset.mode;
 
-        // ABOUT navigates to about project and closes menu
+        // ABOUT navigates to about project
         if (mode === 'about') {
           if (App.state.data && App.state.data.about) {
-            // Si ya estamos en about, solo cerrar menú
+            // Si ya estamos en about, no hacer nada
             if (App.state.view === 'project' && App.state.activeProjectSlug === App.state.data.about.slug) {
-              close();
               return;
             }
-            close();
+            modeItems.forEach(mi => mi.classList.toggle('menu-modal__item--active', mi.dataset.mode === 'about'));
             App.enterProject(App.state.data.about.slug);
           }
           return;
@@ -96,7 +97,6 @@ const Menu = (() => {
           menuCategories.style.display = mode === 'personal' ? 'none' : '';
           catItems.forEach(ci => ci.classList.toggle('menu-modal__item--active', ci.dataset.category === 'all'));
 
-          close();
           App.rebuildHome();
           Header.updateForHome();
         }
