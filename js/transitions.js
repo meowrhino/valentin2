@@ -1,28 +1,29 @@
 /* ============================================
-   TRANSITIONS — 8x8 Grid blackout/reveal (smoother)
-   Grid only covers content area (between header/footer).
-   Header/footer do a soft crossfade independently.
+   TRANSITIONS — 8x8 Grid + Horizontal wipe
+   Grid: for project navigation (content area only)
+   Wipe: for mode/category changes (left-to-right sweep)
    ============================================ */
 
 const Transitions = (() => {
   const grid = document.getElementById('transition-grid');
-  const header = document.getElementById('header');
-  const footer = document.getElementById('footer');
+  const wipeOverlay = document.getElementById('wipe-overlay');
+  const headerWrapper = document.querySelector('.bar-wrapper--top');
+  const footerWrapper = document.querySelector('.bar-wrapper--bottom');
+
   const CELLS = 64;
   const STAGGER_MS = 8;
   const CELL_FADE_MS = 150;
   const REVEAL_STAGGER_MS = 14;
   const REVEAL_FADE_MS = 450;
   const BLACK_PAUSE_MS = 250;
-  const HEADER_FADE_MS = 400; // soft crossfade for header/footer
 
   let cells = [];
   let running = false;
 
   function buildGrid() {
     if (cells.length) return;
-    for (let i = 0; i < CELLS; i++) {
-      const cell = document.createElement('div');
+    for (var i = 0; i < CELLS; i++) {
+      var cell = document.createElement('div');
       cell.className = 'transition-grid__cell';
       grid.appendChild(cell);
       cells.push(cell);
@@ -30,29 +31,25 @@ const Transitions = (() => {
   }
 
   function randomOrder() {
-    const indices = Array.from({ length: CELLS }, (_, i) => i);
-    return Utils.shuffle(indices);
+    return Utils.shuffle(Array.from({ length: CELLS }, function(_, i) { return i; }));
   }
 
   function cleanup() {
-    cells.forEach(c => {
+    cells.forEach(function(c) {
       c.style.transition = 'none';
       c.style.opacity = '0';
     });
     grid.offsetHeight;
-    cells.forEach(c => {
-      c.style.transition = '';
-    });
+    cells.forEach(function(c) { c.style.transition = ''; });
     grid.style.pointerEvents = 'none';
 
     // Restore header/footer
-    header.style.transition = '';
-    header.style.opacity = '';
-    footer.style.transition = '';
-    footer.style.opacity = '';
+    headerWrapper.classList.remove('bar-wrapper--fading');
+    footerWrapper.classList.remove('bar-wrapper--fading');
     running = false;
   }
 
+  // 8x8 Grid transition (for project enter/exit/navigation)
   function run(callback) {
     if (running) {
       cleanup();
@@ -60,76 +57,95 @@ const Transitions = (() => {
       return Promise.resolve();
     }
 
-    return new Promise(resolve => {
+    return new Promise(function(resolve) {
       running = true;
       buildGrid();
       grid.style.pointerEvents = 'all';
 
-      const blackoutOrder = randomOrder();
-      const revealOrder = randomOrder();
+      var blackoutOrder = randomOrder();
+      var revealOrder = randomOrder();
 
-      // Header/footer: soft fade out during blackout
-      header.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
-      footer.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
-      header.style.opacity = '0';
-      footer.style.opacity = '0';
+      // Header/footer soft fade
+      headerWrapper.classList.add('bar-wrapper--fading');
+      footerWrapper.classList.add('bar-wrapper--fading');
 
-      // Phase 1: Blackout (content area only)
-      blackoutOrder.forEach((idx, i) => {
-        setTimeout(() => {
+      // Phase 1: Blackout
+      blackoutOrder.forEach(function(idx, i) {
+        setTimeout(function() {
           if (!running) return;
-          cells[idx].style.transition = `opacity ${CELL_FADE_MS}ms ease-in-out`;
+          cells[idx].style.transition = 'opacity ' + CELL_FADE_MS + 'ms ease-in-out';
           cells[idx].style.opacity = '1';
         }, i * STAGGER_MS);
       });
 
-      const blackoutDuration = CELLS * STAGGER_MS + CELL_FADE_MS;
+      var blackoutDuration = CELLS * STAGGER_MS + CELL_FADE_MS;
 
-      setTimeout(() => {
+      setTimeout(function() {
         if (!running) { resolve(); return; }
-
-        // Execute callback while screen is black
         if (callback) callback();
 
-        // Header/footer: soft fade back in during reveal
-        header.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
-        footer.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
-        header.style.opacity = '1';
-        footer.style.opacity = '1';
+        // Restore header/footer
+        headerWrapper.classList.remove('bar-wrapper--fading');
+        footerWrapper.classList.remove('bar-wrapper--fading');
 
-        setTimeout(() => {
+        setTimeout(function() {
           if (!running) { resolve(); return; }
 
-          // Phase 2: Reveal (content area)
-          revealOrder.forEach((idx, i) => {
-            setTimeout(() => {
+          // Phase 2: Reveal
+          revealOrder.forEach(function(idx, i) {
+            setTimeout(function() {
               if (!running) return;
-              cells[idx].style.transition = `opacity ${REVEAL_FADE_MS}ms ease-in-out`;
+              cells[idx].style.transition = 'opacity ' + REVEAL_FADE_MS + 'ms ease-in-out';
               cells[idx].style.opacity = '0';
             }, i * REVEAL_STAGGER_MS);
           });
 
-          const revealDuration = CELLS * REVEAL_STAGGER_MS + REVEAL_FADE_MS;
+          var revealDuration = CELLS * REVEAL_STAGGER_MS + REVEAL_FADE_MS;
 
-          setTimeout(() => {
+          setTimeout(function() {
             cleanup();
             resolve();
           }, revealDuration + 150);
         }, BLACK_PAUSE_MS);
       }, blackoutDuration);
 
-      // Safety timeout
-      const totalMax = blackoutDuration + BLACK_PAUSE_MS +
-                       CELLS * REVEAL_STAGGER_MS + REVEAL_FADE_MS + 500;
-      setTimeout(() => {
-        if (running) {
-          console.warn('Transition safety timeout — forcing cleanup');
-          cleanup();
-          resolve();
-        }
+      // Safety
+      var totalMax = blackoutDuration + BLACK_PAUSE_MS + CELLS * REVEAL_STAGGER_MS + REVEAL_FADE_MS + 500;
+      setTimeout(function() {
+        if (running) { cleanup(); resolve(); }
       }, totalMax);
     });
   }
 
-  return { run, buildGrid };
+  // Horizontal wipe (for mode/category changes)
+  function wipe(callback) {
+    return new Promise(function(resolve) {
+      // Reset
+      wipeOverlay.className = 'wipe-overlay';
+      wipeOverlay.offsetHeight; // force reflow
+
+      // Wipe in (left to right cover)
+      wipeOverlay.classList.add('wipe-overlay--in');
+
+      setTimeout(function() {
+        // Execute callback while covered
+        if (callback) callback();
+
+        // Small pause
+        setTimeout(function() {
+          // Wipe out (continue right)
+          wipeOverlay.classList.remove('wipe-overlay--in');
+          wipeOverlay.classList.add('wipe-overlay--out');
+
+          setTimeout(function() {
+            // Reset overlay
+            wipeOverlay.className = 'wipe-overlay';
+            resolve();
+          }, 450);
+        }, 100);
+      }, 420);
+    });
+  }
+
+  return { run, wipe, buildGrid };
 })();

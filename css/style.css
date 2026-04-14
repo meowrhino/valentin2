@@ -297,17 +297,6 @@ button {
 /* Motif style selector */
 .menu-modal__motifs { margin-top: 0.5rem; }
 
-.menu-modal__motifs-label {
-  font-weight: 700;
-  font-size: 0.6rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  opacity: 0.3;
-  display: block;
-  text-align: center;
-  margin-bottom: 0.4rem;
-}
-
 .menu-modal__motifs-options {
   display: flex;
   gap: 0.8rem;
@@ -537,6 +526,32 @@ button {
   background: var(--color-bg);
   opacity: 0;
   transition: opacity 150ms ease-in-out;
+}
+
+/* ============================================
+   HORIZONTAL WIPE — for mode/category transitions
+   ============================================ */
+
+.wipe-overlay {
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: var(--footer-h);
+  z-index: 9;
+  background: var(--color-bg);
+  pointer-events: none;
+  transform: translateX(-100%);
+}
+
+.wipe-overlay--in {
+  transition: transform 0.4s ease-in;
+  transform: translateX(0);
+}
+
+.wipe-overlay--out {
+  transition: transform 0.4s ease-out;
+  transform: translateX(100%);
 }
 
 /* ============================================

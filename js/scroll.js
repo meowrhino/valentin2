@@ -122,10 +122,10 @@ const ScrollView = (() => {
 
       item.appendChild(img);
 
-      // Click image → open in lightbox
-      item.addEventListener('click', () => {
-        const allImages = fotos.map(n => Utils.projectImagePath(proj.slug, n));
-        Lightbox.open(allImages, idx);
+      // Click image → open in lightbox with animation from this position
+      item.addEventListener('click', function() {
+        var allImages = fotos.map(function(n) { return Utils.projectImagePath(proj.slug, n); });
+        Lightbox.open(allImages, idx, img);
       });
 
       imgContainer.appendChild(item);

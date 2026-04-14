@@ -26,7 +26,7 @@ const Header = (() => {
   }
 
   function updateActiveProject(nombre) {
-    // Footer center gets updated by Footer module
+    Footer.updateActiveProject(nombre);
   }
 
   function setProjectColor(color) {

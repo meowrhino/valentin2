@@ -134,22 +134,28 @@ const App = (() => {
   }
 
   function toggleMode() {
-    state.mode = state.mode === 'commercial' ? 'personal' : 'commercial';
-    state.category = 'all';
-    state.collapsedProjects.clear();
-    updateProjects();
-    showHome();
-    Motifs.refresh();
+    Transitions.wipe(function() {
+      state.mode = state.mode === 'commercial' ? 'personal' : 'commercial';
+      state.category = 'all';
+      state.collapsedProjects.clear();
+      updateProjects();
+      ScrollView.init(state.projects, state.config);
+      Header.updateForHome();
+      Footer.updateForHome();
+      Motifs.refresh();
+    });
   }
 
   function setCategory(cat) {
-    state.category = cat;
-    state.collapsedProjects.clear();
-    updateProjects();
-    ScrollView.init(state.projects, state.config);
-    Footer.updateActiveCategory();
-    Header.updateForHome();
-    Motifs.refresh();
+    Transitions.wipe(function() {
+      state.category = cat;
+      state.collapsedProjects.clear();
+      updateProjects();
+      ScrollView.init(state.projects, state.config);
+      Footer.updateActiveCategory();
+      Header.updateForHome();
+      Motifs.refresh();
+    });
   }
 
   function prevProject() {
@@ -213,12 +219,14 @@ const App = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   function rebuildHome() {
-    state.collapsedProjects.clear();
-    updateProjects();
-    ScrollView.init(state.projects, state.config);
-    Footer.updateActiveCategory();
-    Header.updateForHome();
-    Motifs.refresh();
+    Transitions.wipe(function() {
+      state.collapsedProjects.clear();
+      updateProjects();
+      ScrollView.init(state.projects, state.config);
+      Footer.updateActiveCategory();
+      Header.updateForHome();
+      Motifs.refresh();
+    });
   }
 
   return {

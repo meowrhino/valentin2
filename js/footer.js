@@ -1,7 +1,7 @@
 /* ============================================
    FOOTER — Arrows + center label
-   Home: shows project name (opens menu)
-   Project: shows "BACK TO HOME" (exits project)
+   Home: shows active project name
+   Project: shows "BACK TO HOME"
    ============================================ */
 
 const Footer = (() => {
@@ -22,7 +22,8 @@ const Footer = (() => {
   function updateActiveProject(nombre) {
     if (App.state.view === 'home' && nombre) {
       centerBtn.textContent = nombre.toUpperCase();
-      centerBtn.onclick = () => Menu.open();
+      // In home, clicking footer project name does nothing special (just info)
+      centerBtn.onclick = null;
     }
   }
 
@@ -30,7 +31,7 @@ const Footer = (() => {
 
   function init() {
     prevBtn.addEventListener('click', () => {
-      if (Lightbox.isOpen()) return; // don't navigate while lightbox is open
+      if (Lightbox.isOpen()) return;
       if (App.state.view === 'home') {
         ScrollView.prevProject();
       } else {
