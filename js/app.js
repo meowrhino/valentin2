@@ -20,7 +20,6 @@ const App = (() => {
   };
 
   async function init() {
-    // Load data
     try {
       const res = await fetch(`${Utils.BASE}/data.json`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -30,16 +29,15 @@ const App = (() => {
       return;
     }
 
-    // Store config
     state.config.createTitleText = state.data.createTitleText ?? true;
     state.config.gap = state.data.gap ?? 5;
-
-    // Store project arrays
     state.allCommercial = state.data.projects || [];
     state.allPersonal = state.data.personalProjects || [];
 
     // Initialize modules
+    Settings.init();
     Header.init();
+    Menu.init();
     Footer.init();
     Motifs.init();
     Transitions.buildGrid();
@@ -49,7 +47,6 @@ const App = (() => {
     if (path && path !== '' && path !== 'index.html') {
       const proj = findProjectBySlug(path);
       if (proj) {
-        // Determine mode
         state.mode = state.allPersonal.some(p => p.slug === proj.slug) ? 'personal' : 'commercial';
         updateProjects();
         showHome(false);
@@ -58,7 +55,6 @@ const App = (() => {
       }
     }
 
-    // Default: show home
     updateProjects();
     showHome();
   }
@@ -113,6 +109,7 @@ const App = (() => {
       ProjectView.show(proj);
       Header.showProjectMarquee(proj.nombre);
       Footer.updateForProject();
+      ColorWipe.setColor(proj.color);
       Motifs.refresh();
 
       history.pushState({ view: 'project', slug }, '', Utils.BASE + '/' + slug);
@@ -154,8 +151,6 @@ const App = (() => {
     state.category = cat;
     state.collapsedProjects.clear();
     updateProjects();
-
-    // Rebuild scroll with filtered projects
     ScrollView.init(state.projects, state.config);
     Footer.updateActiveCategory();
     Motifs.refresh();
@@ -173,6 +168,7 @@ const App = (() => {
         state.activeProjectSlug = prev.slug;
         ProjectView.show(proj);
         Header.showProjectMarquee(proj.nombre);
+        ColorWipe.setColor(proj.color);
         history.pushState({ view: 'project', slug: prev.slug }, '', Utils.BASE + '/' + prev.slug);
       });
     }
@@ -190,6 +186,7 @@ const App = (() => {
         state.activeProjectSlug = next.slug;
         ProjectView.show(proj);
         Header.showProjectMarquee(proj.nombre);
+        ColorWipe.setColor(proj.color);
         history.pushState({ view: 'project', slug: next.slug }, '', Utils.BASE + '/' + next.slug);
       });
     }
@@ -206,6 +203,7 @@ const App = (() => {
         ProjectView.show(proj);
         Header.showProjectMarquee(proj.nombre);
         Footer.updateForProject();
+        ColorWipe.setColor(proj.color);
       }
     } else {
       state.view = 'home';
@@ -220,7 +218,6 @@ const App = (() => {
   // Boot
   document.addEventListener('DOMContentLoaded', init);
 
-  // Called from Header menu when mode changes
   function rebuildHome() {
     state.collapsedProjects.clear();
     updateProjects();

@@ -7,9 +7,10 @@ const ScrollView = (() => {
   const content = document.getElementById('scroll-content');
 
   const BATCH_SIZE = 6;
-  const THRESHOLD = 0.2; // load at 80% scroll
+  const THRESHOLD = 0.2;
   const FILL_FACTOR = 1.2;
   const MARQUEE_VARIANTS = ['scroll-marquee--v1', 'scroll-marquee--v2', 'scroll-marquee--v3', 'scroll-marquee--v4'];
+  const MARQUEE_REPEATS = 10; // was 4 — many more instances for full coverage
 
   let pool = [];
   let poolPtr = 0;
@@ -19,7 +20,40 @@ const ScrollView = (() => {
   let activeObserver = null;
   let sentinelObserver = null;
   let projectElements = [];
-  let lastScrollTop = 0; // track all project group elements for navigation
+  let lastScrollTop = 0;
+
+  // ---- Smooth scroll with ease-in-out ----
+  function smoothScrollTo(target, duration = 900) {
+    const startY = host.scrollTop;
+    const targetRect = target.getBoundingClientRect();
+    const hostRect = host.getBoundingClientRect();
+    const targetCenter = targetRect.top + targetRect.height / 2 - hostRect.top + host.scrollTop;
+    const endY = targetCenter - host.clientHeight / 2;
+    const distance = endY - startY;
+    let startTime = null;
+
+    // Ease-in-out cubic
+    function easeInOutCubic(t) {
+      return t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeInOutCubic(progress);
+
+      host.scrollTop = startY + distance * eased;
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
 
   // ---- Build the scroll ----
   function init(projectList, config) {
@@ -29,7 +63,6 @@ const ScrollView = (() => {
 
     if (!projects.length) return;
 
-    // Read spacing from CSS custom properties
     const createTitleText = config.createTitleText;
 
     // Padding at start
@@ -50,7 +83,6 @@ const ScrollView = (() => {
         spacerTop.style.height = 'calc(var(--gap-between) / 2)';
         content.appendChild(spacerTop);
 
-        // Sentinel: invisible 1px div at midpoint — triggers motif/color change
         const sentinel = document.createElement('div');
         sentinel.className = 'gap-sentinel';
         sentinel.dataset.nextSlug = projects[i + 1].slug;
@@ -67,16 +99,10 @@ const ScrollView = (() => {
     pool = Utils.shuffle([...projects, ...projects, ...projects]);
     poolPtr = 0;
 
-    // Ensure minimum fill
     ensureMinFill(createTitleText);
-
-    // Setup scroll listener
     enableInfiniteScroll(createTitleText);
-
-    // Setup active project detection
     setupActiveDetection();
 
-    // Scroll to top
     host.scrollTop = 0;
   }
 
@@ -85,18 +111,15 @@ const ScrollView = (() => {
     wrapper.className = 'project-group-wrapper';
     wrapper.dataset.slug = proj.slug;
 
-    // Marquee title (if enabled)
     if (createTitleText) {
       const marquee = createScrollMarquee(proj.nombre, proj.slug);
       wrapper.appendChild(marquee);
     }
 
-    // Image container (collapsible)
     const imgContainer = document.createElement('div');
     imgContainer.className = 'project-group';
     imgContainer.dataset.slug = proj.slug;
 
-    // Render fotosHome images
     const fotos = proj.fotosHome || [1];
     fotos.forEach((num, idx) => {
       const item = document.createElement('div');
@@ -110,15 +133,9 @@ const ScrollView = (() => {
       Utils.lazyLoad(img, host);
 
       item.appendChild(img);
-
-      // Click to enter project
-      item.addEventListener('click', () => {
-        App.enterProject(proj.slug);
-      });
-
+      item.addEventListener('click', () => App.enterProject(proj.slug));
       imgContainer.appendChild(item);
 
-      // Inner gap between photos of same project
       if (idx < fotos.length - 1) {
         const innerSpacer = document.createElement('div');
         innerSpacer.style.height = 'var(--gap-base)';
@@ -139,22 +156,20 @@ const ScrollView = (() => {
     const track = document.createElement('div');
     track.className = 'scroll-marquee__track';
 
-    // Wide spacing between iterations — no dots, just generous whitespace
+    // Clean text — spacing handled entirely by CSS padding-right
     const text = nombre.toUpperCase();
-    const spacer = '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'; // 30 non-breaking spaces
-    const repeated = (text + spacer).repeat(4);
 
-    // Two copies for seamless CSS animation
-    const span1 = document.createElement('span');
-    span1.className = 'scroll-marquee__text';
-    span1.textContent = repeated;
+    // Two groups of individual spans for seamless CSS animation
+    // Each span = one instance of the name, CSS padding-right creates uniform gaps
+    for (let g = 0; g < 2; g++) {
+      for (let i = 0; i < MARQUEE_REPEATS; i++) {
+        const span = document.createElement('span');
+        span.className = 'scroll-marquee__text';
+        span.textContent = text;
+        track.appendChild(span);
+      }
+    }
 
-    const span2 = document.createElement('span');
-    span2.className = 'scroll-marquee__text';
-    span2.textContent = repeated;
-
-    track.appendChild(span1);
-    track.appendChild(span2);
     marquee.appendChild(track);
 
     // Accordion toggle
@@ -168,7 +183,6 @@ const ScrollView = (() => {
 
   function toggleAccordion(slug, marqueeEl) {
     const isPaused = marqueeEl.classList.contains('scroll-marquee--paused');
-    // Find all wrappers and their marquees for this slug
     const wrappers = content.querySelectorAll(`.project-group-wrapper[data-slug="${slug}"]`);
 
     wrappers.forEach(wrapper => {
@@ -219,7 +233,6 @@ const ScrollView = (() => {
 
       const proj = pool[poolPtr++];
 
-      // Spacer before each new project with sentinel at midpoint
       const spacerTop = document.createElement('div');
       spacerTop.style.height = 'calc(var(--gap-between) / 2)';
       fragment.appendChild(spacerTop);
@@ -236,7 +249,6 @@ const ScrollView = (() => {
 
       const group = renderProjectGroup(proj, createTitleText);
 
-      // If this project is currently collapsed, collapse the new instance too
       if (App.state.collapsedProjects.has(proj.slug)) {
         const imgGroup = group.querySelector('.project-group');
         if (imgGroup) imgGroup.classList.add('project-group--collapsed');
@@ -250,12 +262,10 @@ const ScrollView = (() => {
 
     content.appendChild(fragment);
 
-    // Re-observe new images for lazy loading
     content.querySelectorAll('img[data-src]').forEach(img => {
       Utils.lazyLoad(img, host);
     });
 
-    // Re-observe new sentinels for motif changes
     if (sentinelObserver) {
       content.querySelectorAll('.gap-sentinel').forEach(s => {
         sentinelObserver.observe(s);
@@ -292,12 +302,11 @@ const ScrollView = (() => {
     }
   }
 
-  // ---- Active project detection (name + color in header/footer) ----
+  // ---- Active project detection ----
   function setupActiveDetection() {
     if (activeObserver) activeObserver.disconnect();
     if (sentinelObserver) sentinelObserver.disconnect();
 
-    // Observer for scroll items: updates project name + color
     activeObserver = new IntersectionObserver((entries) => {
       let bestEntry = null;
       let bestRatio = 0;
@@ -328,7 +337,6 @@ const ScrollView = (() => {
       activeObserver.observe(item);
     });
 
-    // Sentinel observer: triggers motif crossfade at gap midpoints
     sentinelObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -348,7 +356,7 @@ const ScrollView = (() => {
     });
   }
 
-  // ---- Navigation (jump between projects) ----
+  // ---- Navigation (jump between projects with ease-in-out) ----
   function getVisibleProjectWrappers() {
     return Array.from(content.querySelectorAll('.project-group-wrapper'));
   }
@@ -378,7 +386,7 @@ const ScrollView = (() => {
     const wrappers = getVisibleProjectWrappers();
     const idx = getCurrentIndex();
     if (idx > 0) {
-      wrappers[idx - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      smoothScrollTo(wrappers[idx - 1], 900);
     }
   }
 
@@ -386,7 +394,7 @@ const ScrollView = (() => {
     const wrappers = getVisibleProjectWrappers();
     const idx = getCurrentIndex();
     if (idx < wrappers.length - 1) {
-      wrappers[idx + 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      smoothScrollTo(wrappers[idx + 1], 900);
     }
   }
 

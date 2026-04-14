@@ -17,10 +17,14 @@
   --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Spacing system — everything derives from --gap-base */
-  --gap-base: 15dvh;                          /* between photos of same project */
-  --gap-between: calc(var(--gap-base) * 3);   /* between different projects */
-  --gap-collapsed: calc(var(--gap-base) / 2); /* when marquee is minimized */
-  --scroll-pad: calc(var(--gap-base) * 2);    /* top/bottom padding = base × 2 */
+  --gap-base: 15dvh;
+  --gap-between: calc(var(--gap-base) * 3);
+  --gap-collapsed: calc(var(--gap-base) / 2);
+  --scroll-pad: calc(var(--gap-base) * 2);
+
+  /* Marquee spacing */
+  --marquee-gap: 10em;
+  --marquee-header-gap: 8em;
 }
 
 /* ---- RESET ---- */
@@ -62,13 +66,50 @@ button {
   overflow: hidden;
 }
 
+/* Color layers for center-wipe effect — behind header/footer */
+.color-layer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+  --current-color: #fff;
+  --next-color: #fff;
+  background: var(--current-color);
+}
+
+.color-layer--header {
+  top: 0;
+  height: var(--header-h);
+}
+
+.color-layer--footer {
+  bottom: 0;
+  height: var(--footer-h);
+}
+
+/* Wipe animation: center outward using clip-path */
+.color-layer--wipe {
+  animation: color-wipe-expand 0.6s ease-out forwards;
+  background: var(--next-color);
+}
+
+@keyframes color-wipe-expand {
+  0% {
+    clip-path: inset(0 50% 0 50%);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
 .scroll-host {
   position: fixed;
   top: var(--header-h);
   left: 0;
   right: 0;
   bottom: var(--footer-h);
-  z-index: 2;
+  z-index: 3;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
@@ -79,7 +120,7 @@ button {
   position: fixed;
   left: 0;
   right: 0;
-  z-index: 3;
+  z-index: 4;
   background: var(--color-bg);
 }
 
@@ -104,20 +145,12 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  border-bottom: 1px solid var(--color-text);
+  border-bottom: 1px solid var(--project-color, #fff);
   transition: border-color var(--transition-speed) var(--transition-ease);
 }
 
 .header__left {
   flex: 1;
-}
-
-#header-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  transition: color var(--transition-speed) var(--transition-ease);
 }
 
 .header__center {
@@ -127,17 +160,15 @@ button {
   justify-content: center;
 }
 
-.mode-toggle {
+/* VALENTIN BARRIO — always centered, always static */
+#header-name {
   font-weight: 700;
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.6;
-  transition: opacity 0.2s, color var(--transition-speed) var(--transition-ease);
-}
-
-.mode-toggle:hover {
-  opacity: 1;
+  color: var(--project-color, #fff);
+  transition: color var(--transition-speed) var(--transition-ease);
+  cursor: pointer;
 }
 
 .header__right {
@@ -152,7 +183,8 @@ button {
   letter-spacing: 0.15em;
   text-transform: uppercase;
   opacity: 0.7;
-  transition: opacity 0.2s;
+  color: var(--project-color, #fff);
+  transition: opacity 0.2s, color var(--transition-speed) var(--transition-ease);
 }
 
 .menu-toggle:hover {
@@ -186,7 +218,7 @@ button {
   font-size: 0.9rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  padding-right: 3em;
+  padding-right: var(--marquee-header-gap);
 }
 
 @keyframes marquee-scroll {
@@ -195,7 +227,7 @@ button {
 }
 
 /* ============================================
-   FOOTER (only arrows)
+   FOOTER
    ============================================ */
 
 #footer {
@@ -209,7 +241,7 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  border-top: 1px solid var(--color-text);
+  border-top: 1px solid var(--project-color, #fff);
   transition: border-color var(--transition-speed) var(--transition-ease);
 }
 
@@ -218,6 +250,7 @@ button {
   font-size: 1.5rem;
   letter-spacing: 0;
   opacity: 0.8;
+  color: var(--project-color, #fff);
   transition: opacity 0.2s, color var(--transition-speed) var(--transition-ease);
   padding: 0 12px;
   line-height: 1;
@@ -256,6 +289,7 @@ button {
 
 .menu-modal--hidden {
   pointer-events: none;
+  visibility: hidden;
 }
 
 .menu-modal--hidden .menu-modal__backdrop {
@@ -263,7 +297,7 @@ button {
 }
 
 .menu-modal--hidden .menu-modal__content {
-  transform: translateY(100vh);
+  opacity: 0;
 }
 
 .menu-modal__backdrop {
@@ -283,29 +317,85 @@ button {
   z-index: 1;
   border: 1px solid var(--project-color, #fff);
   background: var(--color-bg);
-  /* Boing: bounce overshoot on open, dip-then-exit on close */
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  /* Default: enter from bottom */
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.3s ease;
 }
 
-/* When closing: different easing (dip down first, then fly up) */
-.menu-modal--closing .menu-modal__content {
-  transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05);
-  transform: translateY(-100vh);
+/* From bottom (default) */
+.menu-modal--from-bottom.menu-modal--hidden .menu-modal__content {
+  transform: translateY(100vh);
+  opacity: 0;
 }
 
+.menu-modal--from-bottom .menu-modal__content {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* From left */
+.menu-modal--from-left.menu-modal--hidden .menu-modal__content {
+  transform: translateX(-100vw);
+  opacity: 0;
+}
+
+.menu-modal--from-left .menu-modal__content {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Closing animation — smooth exit, no bounce */
+.menu-modal--closing .menu-modal__backdrop {
+  opacity: 0;
+}
+
+.menu-modal--from-bottom.menu-modal--closing .menu-modal__content {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 1, 1), opacity 0.3s ease;
+  transform: translateY(100vh);
+  opacity: 0;
+}
+
+.menu-modal--from-left.menu-modal--closing .menu-modal__content {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 1, 1), opacity 0.3s ease;
+  transform: translateX(100vw);
+  opacity: 0;
+}
+
+/* Close buttons — all 4 corners */
 .menu-modal__close {
   position: absolute;
-  top: 0;
-  right: 0;
   font-size: 1.5rem;
   font-weight: 300;
   opacity: 0.5;
   transition: opacity 0.2s;
-  padding: 8px;
+  padding: 16px;
+  z-index: 2;
+  line-height: 1;
 }
 
 .menu-modal__close:hover {
   opacity: 1;
+}
+
+.menu-modal__close--tl { top: 0; left: 0; }
+.menu-modal__close--tr { top: 0; right: 0; }
+.menu-modal__close--bl { bottom: 0; left: 0; }
+.menu-modal__close--br { bottom: 0; right: 0; }
+
+/* Color reveal layer for category hover */
+.menu-modal__color-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 0.4s ease-out;
+  background: var(--menu-hover-color, transparent);
+}
+
+.menu-modal__content--color-reveal .menu-modal__color-layer {
+  clip-path: circle(150% at 50% 50%);
 }
 
 .menu-modal__section {
@@ -313,14 +403,11 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 0.6rem;
+  position: relative;
+  z-index: 1;
 }
 
-.menu-modal__divider {
-  width: 40px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.3);
-  margin: 0.5rem 0;
-}
+/* No divider — removed */
 
 .menu-modal__item {
   font-weight: 300;
@@ -341,10 +428,7 @@ button {
   opacity: 1;
 }
 
-.menu-modal__dot {
-  font-size: 0.6rem;
-  margin-right: 0.3em;
-}
+/* No dots — removed */
 
 /* ============================================
    SCROLL CONTENT — HOME
@@ -404,16 +488,15 @@ button {
   font-size: 3.5rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding-right: 1em;
+  padding-right: var(--marquee-gap);
   transition: font-weight 0.3s var(--transition-ease);
 }
 
 /* Marquee animation variants */
-/* v1: LTR normal, v2: RTL normal, v3: LTR slow, v4: RTL fast */
-.scroll-marquee--v1 .scroll-marquee__track { animation: marquee-ltr 14s linear infinite; }
-.scroll-marquee--v2 .scroll-marquee__track { animation: marquee-rtl 14s linear infinite; }
-.scroll-marquee--v3 .scroll-marquee__track { animation: marquee-ltr 22s linear infinite; }
-.scroll-marquee--v4 .scroll-marquee__track { animation: marquee-rtl 8s linear infinite; }
+.scroll-marquee--v1 .scroll-marquee__track { animation: marquee-ltr 18s linear infinite; }
+.scroll-marquee--v2 .scroll-marquee__track { animation: marquee-rtl 18s linear infinite; }
+.scroll-marquee--v3 .scroll-marquee__track { animation: marquee-ltr 28s linear infinite; }
+.scroll-marquee--v4 .scroll-marquee__track { animation: marquee-rtl 12s linear infinite; }
 
 @keyframes marquee-ltr {
   0% { transform: translateX(-50%); }
@@ -441,8 +524,8 @@ button {
   font-weight: 800;
 }
 
-/* Hide the duplicate span when paused (only show one instance, left-aligned) */
-.scroll-marquee--paused .scroll-marquee__text:nth-child(2) {
+/* Hide all but the first span when paused (only show one instance) */
+.scroll-marquee--paused .scroll-marquee__text:not(:first-child) {
   display: none;
 }
 
@@ -528,7 +611,7 @@ button {
   opacity: 0.6;
 }
 
-/* Ficha técnica */
+/* Ficha tecnica */
 .ficha {
   padding: 3rem 2rem;
   display: flex;
@@ -580,11 +663,11 @@ button {
 .transition-grid__cell {
   background: var(--color-bg);
   opacity: 0;
-  transition: opacity 150ms ease;
+  transition: opacity 150ms ease-in-out;
 }
 
 /* ============================================
-   MOTIFS (floating background — screensaver style)
+   MOTIFS — 5 animation style sets
    ============================================ */
 
 .motif {
@@ -592,77 +675,243 @@ button {
   pointer-events: none;
   filter: invert(1);
   z-index: 1;
-  /* Use transform for GPU-only animation, no repaints */
   will-change: transform;
 }
 
-/* Screensaver-style: fixed pixel offsets for GPU compositing */
-@keyframes screensaver-1 {
-  0%   { transform: translate(0, 0); }
-  50%  { transform: translate(200px, 150px); }
-  100% { transform: translate(0, 0); }
-}
-
-@keyframes screensaver-2 {
-  0%   { transform: translate(0, 0) rotate(0deg); }
-  50%  { transform: translate(-180px, 200px) rotate(45deg); }
-  100% { transform: translate(0, 0) rotate(0deg); }
-}
-
-@keyframes screensaver-3 {
-  0%   { transform: translate(0, 0); }
-  33%  { transform: translate(250px, -100px); }
-  66%  { transform: translate(-100px, 200px); }
-  100% { transform: translate(0, 0); }
-}
-
-@keyframes screensaver-4 {
-  0%   { transform: translate(0, 0) rotate(0deg); }
-  50%  { transform: translate(-200px, 250px) rotate(30deg); }
-  100% { transform: translate(0, 0) rotate(0deg); }
-}
-
-/* Slow diagonal drift — very subtle, like dust */
-@keyframes screensaver-5 {
+/* ---- A: Flotacion organica (smooth, short paths, ease-in-out) ---- */
+@keyframes organic-1 {
   0%   { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(150px, 180px) scale(1.03); }
-  66%  { transform: translate(-80px, 100px) scale(0.97); }
+  50%  { transform: translate(80px, 60px) scale(1.02); }
   100% { transform: translate(0, 0) scale(1); }
 }
 
-/* Figure-eight path — organic, looping */
-@keyframes screensaver-6 {
+@keyframes organic-2 {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  33%  { transform: translate(-60px, 80px) rotate(8deg); }
+  66%  { transform: translate(40px, -30px) rotate(-5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes organic-3 {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(50px, -40px) scale(0.98); }
+  50%  { transform: translate(-30px, 70px) scale(1.03); }
+  75%  { transform: translate(60px, 20px) scale(0.99); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes organic-4 {
   0%   { transform: translate(0, 0); }
-  25%  { transform: translate(180px, -120px); }
-  50%  { transform: translate(0, 0); }
-  75%  { transform: translate(-180px, 120px); }
+  50%  { transform: translate(-70px, -50px) rotate(10deg); }
   100% { transform: translate(0, 0); }
 }
 
+@keyframes organic-5 {
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(90px, -60px) scale(1.04); }
+  70%  { transform: translate(-40px, 50px) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ---- B: Deriva lenta (very slow, subtle diagonals) ---- */
+@keyframes drift-1 {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(120px, 80px); }
+}
+
+@keyframes drift-2 {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(-100px, 120px); }
+}
+
+@keyframes drift-3 {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(80px, -100px); }
+}
+
+@keyframes drift-4 {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(-130px, -60px); }
+}
+
+@keyframes drift-5 {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(60px, 140px); }
+}
+
+/* ---- C: Respiracion (pulsating scale, minimal translation) ---- */
+@keyframes breath-1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(10px, 15px) scale(1.1); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes breath-2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-15px, 10px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes breath-3 {
+  0%   { transform: scale(1) rotate(0deg); }
+  33%  { transform: scale(1.08) rotate(3deg); }
+  66%  { transform: scale(0.92) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes breath-4 {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(20px, -10px) scale(1.12); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes breath-5 {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.06); }
+  50%  { transform: scale(0.94); }
+  75%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* ---- D: Orbital (circular/elliptical paths) ---- */
+@keyframes orbital-1 {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(150px, -80px); }
+  50%  { transform: translate(0px, -160px); }
+  75%  { transform: translate(-150px, -80px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes orbital-2 {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  25%  { transform: translate(120px, 60px) rotate(90deg); }
+  50%  { transform: translate(0, 120px) rotate(180deg); }
+  75%  { transform: translate(-120px, 60px) rotate(270deg); }
+  100% { transform: translate(0, 0) rotate(360deg); }
+}
+
+@keyframes orbital-3 {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(100px, -50px); }
+  40%  { transform: translate(180px, 30px); }
+  60%  { transform: translate(100px, 110px); }
+  80%  { transform: translate(0px, 60px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes orbital-4 {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-100px, -120px); }
+  50%  { transform: translate(-200px, 0px); }
+  75%  { transform: translate(-100px, 120px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes orbital-5 {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(130px, 0) scale(0.95); }
+  50%  { transform: translate(0, -130px) scale(1.05); }
+  75%  { transform: translate(-130px, 0) scale(0.95); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
 /* ============================================
-   PER-PROJECT COLOR THEMING (via CSS custom property)
+   SETTINGS PANEL
    ============================================ */
 
-/* The active project color is set via JS on body: --project-color */
-#header {
-  border-color: var(--project-color, #fff);
+.settings-toggle {
+  position: fixed;
+  bottom: calc(var(--footer-h) + 12px);
+  right: 12px;
+  z-index: 15;
+  font-size: 1.2rem;
+  opacity: 0.3;
+  color: var(--color-text);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-family: inherit;
+  padding: 4px;
 }
 
-.footer__nav {
-  border-color: var(--project-color, #fff);
+.settings-toggle:hover {
+  opacity: 0.8;
 }
 
-#header-name,
-.footer__arrow,
-.menu-toggle,
-.mode-toggle {
-  color: var(--project-color, #fff);
-  transition: color 0.4s ease;
+.settings-panel {
+  position: fixed;
+  bottom: calc(var(--footer-h) + 48px);
+  right: 12px;
+  z-index: 15;
+  background: var(--color-bg);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 16px;
+  min-width: 200px;
+  transition: opacity 0.2s, visibility 0.2s;
 }
 
-/* ============================================
-   WIPE OVERLAYS
-   ============================================ */
+.settings-panel--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.settings-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.settings-panel__close {
+  font-size: 1.2rem;
+  font-weight: 300;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.settings-panel__close:hover {
+  opacity: 1;
+}
+
+.settings-panel__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-panel__label {
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 4px;
+}
+
+.settings-panel__radio {
+  font-size: 0.75rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-panel__radio:hover {
+  opacity: 1;
+}
+
+.settings-panel__radio input {
+  accent-color: var(--project-color, #fff);
+}
 
 /* ============================================
    RESPONSIVE
@@ -685,6 +934,12 @@ button {
 
   .menu-modal__content {
     padding: 2rem 3rem;
+  }
+
+  .settings-panel {
+    right: 8px;
+    bottom: calc(var(--footer-h) + 40px);
+    min-width: 180px;
   }
 }
 

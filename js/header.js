@@ -1,45 +1,47 @@
 /* ============================================
-   HEADER — Branding (always VALENTIN BARRIO) + Mode toggle + Menu Modal
+   HEADER — Branding (always VALENTIN BARRIO center) + Marquee
+   Menu logic extracted to menu.js, color logic to color-wipe.js
    ============================================ */
 
 const Header = (() => {
   const nameEl = document.getElementById('header-name');
   const marqueeEl = document.getElementById('header-marquee');
-  const marqueeTextEl = document.getElementById('header-marquee-text');
+  const marqueeTrack = marqueeEl.querySelector('.marquee__track');
   const menuToggle = document.getElementById('menu-toggle');
-  const modeToggle = document.getElementById('mode-toggle');
-  const menuModal = document.getElementById('menu-modal');
-  const menuClose = document.getElementById('menu-close');
-  const menuBackdrop = menuModal.querySelector('.menu-modal__backdrop');
-  const menuCategories = document.getElementById('menu-categories');
   const footerProjectName = document.getElementById('footer-project-name');
-
-  const modeItems = menuModal.querySelectorAll('[data-mode]');
-  const catItems = menuModal.querySelectorAll('[data-category]');
 
   function updateForHome() {
     marqueeEl.classList.add('header__marquee--hidden');
-    // VALENTIN BARRIO always visible — it's the link to about
-    nameEl.textContent = App.state.mode === 'commercial' ? 'VALENTIN BARRIO' : 'VALENTIN';
-    modeToggle.textContent = App.state.mode === 'commercial' ? 'COMERCIAL' : 'PERSONAL';
+    // VALENTIN BARRIO is always static in center — never changes
+    nameEl.textContent = 'VALENTIN BARRIO';
     footerProjectName.textContent = '';
   }
 
   function updateActiveProject(nombre) {
-    // Project name goes to FOOTER center (between arrows), not header
+    // Project name goes to FOOTER center (between arrows)
     if (App.state.view === 'home' && nombre) {
       footerProjectName.textContent = nombre.toUpperCase();
     }
   }
 
   function setProjectColor(color) {
-    document.body.style.setProperty('--project-color', color || '#fff');
+    // Delegate to ColorWipe for center-outward animation
+    ColorWipe.setColor(color);
   }
 
   function showProjectMarquee(nombre) {
     const text = nombre.toUpperCase();
-    const repeated = (text + '          ').repeat(30);
-    marqueeTextEl.textContent = repeated;
+    // Build marquee track with multiple spans, CSS padding-right creates the gap
+    marqueeTrack.innerHTML = '';
+    // Two groups of repeated spans for seamless loop
+    for (let g = 0; g < 2; g++) {
+      for (let i = 0; i < 12; i++) {
+        const span = document.createElement('span');
+        span.className = 'marquee__text';
+        span.textContent = text;
+        marqueeTrack.appendChild(span);
+      }
+    }
     marqueeEl.classList.remove('header__marquee--hidden');
   }
 
@@ -47,83 +49,20 @@ const Header = (() => {
     marqueeEl.classList.add('header__marquee--hidden');
   }
 
-  // ---- Menu Modal ----
-  function openMenu() {
-    modeItems.forEach(item => {
-      item.classList.toggle('menu-modal__item--active', item.dataset.mode === App.state.mode);
-    });
-    catItems.forEach(item => {
-      item.classList.toggle('menu-modal__item--active', item.dataset.category === App.state.category);
-    });
-    menuCategories.style.display = App.state.mode === 'personal' ? 'none' : '';
-
-    menuModal.classList.remove('menu-modal--closing');
-    menuModal.classList.remove('menu-modal--hidden');
-  }
-
-  function closeMenu() {
-    menuModal.classList.add('menu-modal--closing');
-    setTimeout(() => {
-      menuModal.classList.add('menu-modal--hidden');
-      menuModal.classList.remove('menu-modal--closing');
-    }, 500);
-  }
-
   function init() {
-    menuToggle.addEventListener('click', openMenu);
-    modeToggle.addEventListener('click', openMenu);
-    // Footer project name also opens menu
-    footerProjectName.addEventListener('click', openMenu);
-    menuClose.addEventListener('click', closeMenu);
-    menuBackdrop.addEventListener('click', closeMenu);
+    // MENU button opens menu from bottom
+    menuToggle.addEventListener('click', () => Menu.open('bottom'));
 
-    // VALENTIN BARRIO click → go to about
+    // Footer project name opens menu from bottom
+    footerProjectName.addEventListener('click', () => Menu.open('bottom'));
+
+    // VALENTIN BARRIO click → exit project if in project view
     nameEl.addEventListener('click', () => {
       if (App.state.view === 'project') {
         App.exitProject();
       }
-      // TODO: could navigate to about section in the future
     });
     nameEl.style.cursor = 'pointer';
-
-    // Mode switching
-    modeItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const mode = item.dataset.mode;
-        if (mode !== App.state.mode) {
-          App.state.mode = mode;
-          App.state.category = 'all';
-          App.state.collapsedProjects.clear();
-
-          modeItems.forEach(mi => mi.classList.toggle('menu-modal__item--active', mi.dataset.mode === mode));
-          menuCategories.style.display = mode === 'personal' ? 'none' : '';
-          catItems.forEach(ci => ci.classList.toggle('menu-modal__item--active', ci.dataset.category === 'all'));
-
-          modeToggle.textContent = mode === 'commercial' ? 'COMERCIAL' : 'PERSONAL';
-          App.rebuildHome();
-          updateForHome();
-        }
-      });
-    });
-
-    // Category switching
-    catItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const cat = item.dataset.category;
-        if (cat !== App.state.category) {
-          App.setCategory(cat);
-          catItems.forEach(ci => ci.classList.toggle('menu-modal__item--active', ci.dataset.category === cat));
-          closeMenu();
-        }
-      });
-    });
-
-    // ESC to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !menuModal.classList.contains('menu-modal--hidden')) {
-        closeMenu();
-      }
-    });
   }
 
   return {
@@ -132,7 +71,6 @@ const Header = (() => {
     updateActiveProject,
     setProjectColor,
     showProjectMarquee,
-    hideProjectMarquee,
-    closeMenu
+    hideProjectMarquee
   };
 })();

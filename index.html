@@ -14,13 +14,15 @@
   <!-- Z-1: Motivos flotantes (behind everything) -->
   <div id="motifs-layer"></div>
 
+  <!-- Color layers (behind header/footer, for center-wipe effect) -->
+  <div id="color-layer-header" class="color-layer color-layer--header"></div>
+  <div id="color-layer-footer" class="color-layer color-layer--footer"></div>
+
   <!-- Z-3: Header -->
   <header id="header">
-    <div class="header__left">
-      <span id="header-name">VALENTIN BARRIO</span>
-    </div>
+    <div class="header__left"></div>
     <div class="header__center">
-      <button id="mode-toggle" class="mode-toggle">COMERCIAL</button>
+      <span id="header-name">VALENTIN BARRIO</span>
     </div>
     <div class="header__right">
       <button id="menu-toggle" class="menu-toggle" aria-label="Open menu">MENU</button>
@@ -28,7 +30,7 @@
     <!-- Marquee for project view (hidden by default) -->
     <div id="header-marquee" class="header__marquee header__marquee--hidden">
       <div class="marquee__track">
-        <span class="marquee__text" id="header-marquee-text"></span>
+        <span class="marquee__text"></span>
       </div>
     </div>
   </header>
@@ -52,21 +54,26 @@
     </div>
   </footer>
 
-  <!-- Z-5: Menu modal -->
-  <div id="menu-modal" class="menu-modal menu-modal--hidden">
+  <!-- Z-20: Menu modal -->
+  <div id="menu-modal" class="menu-modal menu-modal--hidden menu-modal--from-bottom">
     <div class="menu-modal__backdrop"></div>
     <div class="menu-modal__content">
-      <button class="menu-modal__close" id="menu-close">&times;</button>
+      <!-- X close buttons in all 4 corners -->
+      <button class="menu-modal__close menu-modal__close--tl" aria-label="Close">&times;</button>
+      <button class="menu-modal__close menu-modal__close--tr" aria-label="Close">&times;</button>
+      <button class="menu-modal__close menu-modal__close--bl" aria-label="Close">&times;</button>
+      <button class="menu-modal__close menu-modal__close--br" aria-label="Close">&times;</button>
+      <!-- Color reveal layer for hover -->
+      <div class="menu-modal__color-layer"></div>
       <div class="menu-modal__section">
         <button class="menu-modal__item menu-modal__item--active" data-mode="commercial">COMERCIAL</button>
         <button class="menu-modal__item" data-mode="personal">PERSONAL</button>
       </div>
-      <div class="menu-modal__divider"></div>
       <div class="menu-modal__section" id="menu-categories">
         <button class="menu-modal__item menu-modal__item--active" data-category="all">ALL</button>
-        <button class="menu-modal__item menu-modal__item--cat" data-category="club"><span class="menu-modal__dot" style="color:#39FF14">&#9679;</span> CLUB</button>
-        <button class="menu-modal__item menu-modal__item--cat" data-category="festival"><span class="menu-modal__dot" style="color:#FF6EC7">&#9679;</span> FESTIVAL</button>
-        <button class="menu-modal__item menu-modal__item--cat" data-category="editorial"><span class="menu-modal__dot" style="color:#00FFFF">&#9679;</span> EDITORIAL</button>
+        <button class="menu-modal__item" data-category="club">CLUB</button>
+        <button class="menu-modal__item" data-category="festival">FESTIVAL</button>
+        <button class="menu-modal__item" data-category="editorial">EDITORIAL</button>
       </div>
     </div>
   </div>
@@ -74,10 +81,32 @@
   <!-- Z-10: Transition grid overlay -->
   <div id="transition-grid" class="transition-grid"></div>
 
+  <!-- Settings panel (motif styles) -->
+  <div id="settings-panel" class="settings-panel settings-panel--hidden">
+    <div class="settings-panel__header">
+      <span>SETTINGS</span>
+      <button class="settings-panel__close">&times;</button>
+    </div>
+    <div class="settings-panel__body">
+      <div class="settings-panel__group">
+        <label class="settings-panel__label">MOTIF STYLE</label>
+        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="organic"> Flotacion organica</label>
+        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="drift"> Deriva lenta</label>
+        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="breath"> Respiracion</label>
+        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="orbital"> Orbital</label>
+        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="mixed" checked> Mixto</label>
+      </div>
+    </div>
+  </div>
+  <button id="settings-toggle" class="settings-toggle" aria-label="Settings">&#9881;</button>
+
   <script src="js/utils.js"></script>
+  <script src="js/color-wipe.js"></script>
   <script src="js/motifs.js"></script>
   <script src="js/transitions.js"></script>
+  <script src="js/settings.js"></script>
   <script src="js/header.js"></script>
+  <script src="js/menu.js"></script>
   <script src="js/footer.js"></script>
   <script src="js/scroll.js"></script>
   <script src="js/project.js"></script>
