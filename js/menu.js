@@ -90,14 +90,16 @@ const Menu = (() => {
       });
     });
 
-    // Motif style buttons
+    // Motif style buttons — uses wipe animation when switching
     const motifBtns = menuModal.querySelectorAll('.menu-modal__motif-btn');
     motifBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const style = btn.dataset.motif;
+        if (style === Settings.get('motifStyle')) return; // already active
         Settings.set('motifStyle', style);
         motifBtns.forEach(b => b.classList.toggle('menu-modal__motif-btn--active', b.dataset.motif === style));
-        Motifs.refresh();
+        // Animated wipe transition for motifs
+        Motifs.wipeRefresh('down');
       });
     });
 

@@ -7,7 +7,7 @@ const Settings = (() => {
   const STORAGE_KEY = 'valentin2_settings';
 
   const defaults = {
-    motifStyle: 'mixed'
+    motifStyle: 'orbital'
   };
 
   let current = {};
