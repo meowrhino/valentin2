@@ -9,7 +9,7 @@ const ScrollView = (() => {
   const BATCH_SIZE = 6;
   const THRESHOLD = 0.2;
   const FILL_FACTOR = 1.2;
-  const MARQUEE_VARIANTS = ['scroll-marquee--v1', 'scroll-marquee--v2', 'scroll-marquee--v3', 'scroll-marquee--v4'];
+  const MARQUEE_VARIANTS = ['scroll-marquee--v1', 'scroll-marquee--v2', 'scroll-marquee--v3'];
 
   let pool = [];
   let poolPtr = 0;
@@ -20,6 +20,7 @@ const ScrollView = (() => {
   let sentinelObserver = null;
   let projectElements = [];
   let lastScrollTop = 0;
+  let lastVariantIdx = -1;
 
   // ---- Smooth scroll with ease-in-out ----
   function smoothScrollTo(target, duration) {
@@ -52,6 +53,7 @@ const ScrollView = (() => {
     projects = projectList;
     content.innerHTML = '';
     projectElements = [];
+    lastVariantIdx = -1;
 
     if (!projects.length) return;
 
@@ -69,19 +71,7 @@ const ScrollView = (() => {
       projectElements.push(group);
 
       if (i < projects.length - 1) {
-        const spacerTop = document.createElement('div');
-        spacerTop.style.height = 'calc(var(--gap-between) / 2)';
-        content.appendChild(spacerTop);
-
-        const sentinel = document.createElement('div');
-        sentinel.className = 'gap-sentinel';
-        sentinel.dataset.nextSlug = projects[i + 1].slug;
-        sentinel.style.height = '1px';
-        content.appendChild(sentinel);
-
-        const spacerBot = document.createElement('div');
-        spacerBot.style.height = 'calc(var(--gap-between) / 2)';
-        content.appendChild(spacerBot);
+        content.appendChild(createGapSentinel(projects[i + 1].slug));
       }
     });
 
@@ -92,6 +82,22 @@ const ScrollView = (() => {
     enableInfiniteScroll(createTitleText);
     setupActiveDetection();
     host.scrollTop = 0;
+  }
+
+  function createGapSentinel(nextSlug) {
+    var frag = document.createDocumentFragment();
+    var top = document.createElement('div');
+    top.style.height = 'calc(var(--gap-between) / 2)';
+    frag.appendChild(top);
+    var sentinel = document.createElement('div');
+    sentinel.className = 'gap-sentinel';
+    sentinel.dataset.nextSlug = nextSlug;
+    sentinel.style.height = '1px';
+    frag.appendChild(sentinel);
+    var bot = document.createElement('div');
+    bot.style.height = 'calc(var(--gap-between) / 2)';
+    frag.appendChild(bot);
+    return frag;
   }
 
   function renderProjectGroup(proj, createTitleText) {
@@ -143,7 +149,11 @@ const ScrollView = (() => {
 
   function createScrollMarquee(nombre, slug) {
     const marquee = document.createElement('div');
-    const variant = Utils.randPick(MARQUEE_VARIANTS);
+    let idx;
+    do { idx = Math.floor(Math.random() * MARQUEE_VARIANTS.length); }
+    while (idx === lastVariantIdx);
+    lastVariantIdx = idx;
+    const variant = MARQUEE_VARIANTS[idx];
     marquee.className = 'scroll-marquee ' + variant;
     marquee.dataset.slug = slug;
 
@@ -197,19 +207,7 @@ const ScrollView = (() => {
 
       const proj = pool[poolPtr++];
 
-      const spacerTop = document.createElement('div');
-      spacerTop.style.height = 'calc(var(--gap-between) / 2)';
-      fragment.appendChild(spacerTop);
-
-      const sentinel = document.createElement('div');
-      sentinel.className = 'gap-sentinel';
-      sentinel.dataset.nextSlug = proj.slug;
-      sentinel.style.height = '1px';
-      fragment.appendChild(sentinel);
-
-      const spacerBot = document.createElement('div');
-      spacerBot.style.height = 'calc(var(--gap-between) / 2)';
-      fragment.appendChild(spacerBot);
+      fragment.appendChild(createGapSentinel(proj.slug));
 
       const group = renderProjectGroup(proj, createTitleText);
 

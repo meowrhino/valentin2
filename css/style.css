@@ -40,6 +40,35 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ---- LOADER ---- */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  transition: opacity 0.4s var(--transition-ease);
+}
+.loader--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.loader__text {
+  font-weight: 800;
+  font-style: italic;
+  font-size: 3.5rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  animation: loader-pulse 1.2s ease-in-out infinite;
+}
+@keyframes loader-pulse {
+  0%, 100% { opacity: 0.2; }
+  50%      { opacity: 1; }
+}
+
 button {
   background: none;
   border: none;
@@ -374,11 +403,13 @@ button {
   transition: font-weight 0.3s var(--transition-ease);
 }
 
-/* Marquee animation variants */
-.scroll-marquee--v1 .scroll-marquee__track { animation: marquee-ltr 18s linear infinite; }
-.scroll-marquee--v2 .scroll-marquee__track { animation: marquee-rtl 18s linear infinite; }
-.scroll-marquee--v3 .scroll-marquee__track { animation: marquee-ltr 28s linear infinite; }
-.scroll-marquee--v4 .scroll-marquee__track { animation: marquee-rtl 12s linear infinite; }
+/* Marquee animation variants
+   v1 = scroll LTR  — continuous left-to-right flow
+   v2 = scroll RTL  — continuous right-to-left flow
+   v3 = bounce      — text bounces back and forth */
+.scroll-marquee--v1 .scroll-marquee__track { animation: marquee-ltr 14s linear infinite; }
+.scroll-marquee--v2 .scroll-marquee__track { animation: marquee-rtl 14s linear infinite; }
+.scroll-marquee--v3 .scroll-marquee__track { animation: marquee-bounce 4s ease-in-out infinite alternate; }
 
 @keyframes marquee-ltr {
   0%   { transform: translateX(-50%); }
@@ -388,6 +419,11 @@ button {
 @keyframes marquee-rtl {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-bounce {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-15%); }
 }
 
 /* Marquee collapsed — slides left */

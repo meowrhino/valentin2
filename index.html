@@ -11,6 +11,11 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- Loader — pure CSS, visible before JS executes -->
+  <div id="loader" class="loader">
+    <span class="loader__text">LOADING</span>
+  </div>
+
   <!-- Z-1: Motivos flotantes -->
   <div id="motifs-layer"></div>
 
@@ -101,17 +106,17 @@
   <!-- Z-10: Transition grid overlay (content area only) -->
   <div id="transition-grid" class="transition-grid"></div>
 
-  <script src="js/utils.js"></script>
-  <script src="js/color-wipe.js"></script>
-  <script src="js/motifs.js"></script>
-  <script src="js/transitions.js"></script>
-  <script src="js/settings.js"></script>
-  <script src="js/header.js"></script>
-  <script src="js/menu.js"></script>
-  <script src="js/footer.js"></script>
-  <script src="js/lightbox.js"></script>
-  <script src="js/scroll.js"></script>
-  <script src="js/project.js"></script>
-  <script src="js/app.js"></script>
+  <script defer src="js/utils.js"></script>
+  <script defer src="js/color-wipe.js"></script>
+  <script defer src="js/motifs.js"></script>
+  <script defer src="js/transitions.js"></script>
+  <script defer src="js/settings.js"></script>
+  <script defer src="js/header.js"></script>
+  <script defer src="js/menu.js"></script>
+  <script defer src="js/footer.js"></script>
+  <script defer src="js/lightbox.js"></script>
+  <script defer src="js/scroll.js"></script>
+  <script defer src="js/project.js"></script>
+  <script defer src="js/app.js"></script>
 </body>
 </html>

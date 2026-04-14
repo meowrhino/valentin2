@@ -52,12 +52,22 @@ const App = (() => {
         updateProjects();
         showHome(false);
         enterProject(proj.slug, false);
+        hideLoader();
         return;
       }
     }
 
     updateProjects();
     showHome();
+    hideLoader();
+  }
+
+  function hideLoader() {
+    var loader = document.getElementById('loader');
+    if (!loader) return;
+    loader.classList.add('loader--hidden');
+    loader.addEventListener('transitionend', function() { loader.remove(); }, { once: true });
+    setTimeout(function() { if (loader.parentNode) loader.remove(); }, 600);
   }
 
   function updateProjects() {
