@@ -613,12 +613,7 @@ button {
   will-change: transform;
 }
 
-/* Wipe transition for motif changes */
-.motif--wipe-out-left  { transition: transform 0.5s ease-in; transform: translateX(-120vw) !important; }
-.motif--wipe-out-right { transition: transform 0.5s ease-in; transform: translateX(120vw) !important; }
-.motif--wipe-in {
-  transition: transform 0.6s ease-out;
-}
+/* Motif fade transitions are handled inline via JS (staggered random-order fade) */
 
 /* ---- A: Organic (smooth jellyfish, ease-in-out) ---- */
 @keyframes organic-1 {

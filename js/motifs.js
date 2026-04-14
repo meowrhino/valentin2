@@ -1,7 +1,7 @@
 /* ============================================
    MOTIFS — Floating background (screensaver style)
    5 movement styles selectable via Settings.
-   Uses wipe (slide) instead of fade for transitions.
+   Staggered random-order fade for transitions.
    ============================================ */
 
 const Motifs = (() => {
@@ -98,54 +98,86 @@ const Motifs = (() => {
     currentMotifs = [];
   }
 
-  function refresh() { init(); }
+  // Staggered fade: random-order fade out, then random-order fade in
+  let fadeInProgress = false;
+  let fadeDebounce = null;
+  let fadeTimeouts = [];
+  const FADE_COOLDOWN = 2000;
+  let lastFadeTime = 0;
+  const STAGGER = 60;
+  const FADE_MS = 250;
 
-  // Wipe: slide old motifs out, new ones in
-  let wipeInProgress = false;
-  let wipeTimeout = null;
-
-  function wipeRefresh(direction) {
-    if (wipeInProgress) return;
-    if (wipeTimeout) clearTimeout(wipeTimeout);
-
-    wipeTimeout = setTimeout(function() {
-      doWipe(direction);
-    }, 300);
+  function cancelFade() {
+    fadeTimeouts.forEach(clearTimeout);
+    fadeTimeouts = [];
+    if (fadeDebounce) { clearTimeout(fadeDebounce); fadeDebounce = null; }
+    fadeInProgress = false;
   }
 
-  function doWipe(direction) {
-    if (wipeInProgress) return;
-    wipeInProgress = true;
+  function refresh() {
+    cancelFade();
+    init();
+  }
 
-    var wipeClass = direction === 'down' ? 'motif--wipe-out-left' : 'motif--wipe-out-right';
+  function wipeRefresh() {
+    if (fadeInProgress) return;
+    var now = Date.now();
+    if (now - lastFadeTime < FADE_COOLDOWN) return;
 
-    // Slide old motifs out
-    currentMotifs.forEach(function(el) {
-      el.classList.add(wipeClass);
+    if (fadeDebounce) clearTimeout(fadeDebounce);
+    fadeDebounce = setTimeout(doFade, 150);
+  }
+
+  function doFade() {
+    if (fadeInProgress) return;
+    fadeInProgress = true;
+    lastFadeTime = Date.now();
+    fadeTimeouts = [];
+
+    var old = currentMotifs.slice();
+    var fadeOutOrder = Utils.shuffle(old.slice());
+
+    // Phase 1: Staggered fade out
+    fadeOutOrder.forEach(function(el, i) {
+      fadeTimeouts.push(setTimeout(function() {
+        if (!fadeInProgress) return;
+        el.style.transition = 'opacity ' + FADE_MS + 'ms ease-out';
+        el.style.opacity = '0';
+      }, i * STAGGER));
     });
 
-    setTimeout(function() {
-      // Remove old, create new
+    var fadeOutTotal = fadeOutOrder.length * STAGGER + FADE_MS;
+
+    fadeTimeouts.push(setTimeout(function() {
+      if (!fadeInProgress) return;
       init();
 
-      // New motifs enter from opposite side
-      var enterFrom = direction === 'down' ? '120vw' : '-120vw';
-      currentMotifs.forEach(function(el) {
-        var targetLeft = el.style.left;
-        el.style.left = enterFrom;
-        el.classList.add('motif--wipe-in');
-        // Force reflow
-        el.offsetHeight;
-        el.style.left = targetLeft;
+      var fadeInOrder = Utils.shuffle(currentMotifs.slice());
+      var targets = fadeInOrder.map(function(el) {
+        var t = el.style.opacity;
+        el.style.opacity = '0';
+        return t;
       });
 
-      setTimeout(function() {
-        currentMotifs.forEach(function(el) {
-          el.classList.remove('motif--wipe-in');
-        });
-        wipeInProgress = false;
-      }, 700);
-    }, 550);
+      // Force single reflow for all, then stagger fade in
+      container.offsetHeight;
+
+      fadeInOrder.forEach(function(el, i) {
+        fadeTimeouts.push(setTimeout(function() {
+          if (!fadeInProgress) return;
+          el.style.transition = 'opacity ' + FADE_MS + 'ms ease-in';
+          el.style.opacity = targets[i];
+        }, i * STAGGER));
+      });
+
+      var fadeInTotal = fadeInOrder.length * STAGGER + FADE_MS;
+
+      fadeTimeouts.push(setTimeout(function() {
+        currentMotifs.forEach(function(el) { el.style.transition = ''; });
+        fadeInProgress = false;
+        fadeTimeouts = [];
+      }, fadeInTotal + 50));
+    }, fadeOutTotal + 50));
   }
 
   return { init, clear, refresh, wipeRefresh };
