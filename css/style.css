@@ -433,6 +433,13 @@ button {
   opacity: 0;
 }
 
+.project-nav__list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .project-nav__mode-row {
   display: flex;
   align-items: center;

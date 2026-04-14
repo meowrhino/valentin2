@@ -109,12 +109,14 @@
 
   <!-- Z-25: Project navigation overlay -->
   <div id="project-nav" class="project-nav project-nav--hidden">
-    <button class="project-nav__close project-nav__close--tl" aria-label="Close">&times;</button>
-    <button class="project-nav__close project-nav__close--tr" aria-label="Close">&times;</button>
-    <button class="project-nav__close project-nav__close--bl" aria-label="Close">&times;</button>
-    <button class="project-nav__close project-nav__close--br" aria-label="Close">&times;</button>
     <div class="project-nav__backdrop"></div>
-    <div class="project-nav__content"></div>
+    <div class="project-nav__content">
+      <button class="project-nav__close project-nav__close--tl" aria-label="Close">&times;</button>
+      <button class="project-nav__close project-nav__close--tr" aria-label="Close">&times;</button>
+      <button class="project-nav__close project-nav__close--bl" aria-label="Close">&times;</button>
+      <button class="project-nav__close project-nav__close--br" aria-label="Close">&times;</button>
+      <div class="project-nav__list"></div>
+    </div>
   </div>
 
   <script defer src="js/utils.js"></script>

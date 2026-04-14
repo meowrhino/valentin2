@@ -10,7 +10,8 @@ const ProjectNav = (() => {
   const nav = document.getElementById('project-nav');
   const backdrop = nav.querySelector('.project-nav__backdrop');
   const content = nav.querySelector('.project-nav__content');
-  const closeButtons = nav.querySelectorAll('.project-nav__close');
+  const list = nav.querySelector('.project-nav__list');
+  const closeButtons = content.querySelectorAll('.project-nav__close');
 
   // Categories cycle order
   const categories = ['all', 'club', 'festival', 'editorial'];
@@ -24,7 +25,7 @@ const ProjectNav = (() => {
   }
 
   function buildList() {
-    content.innerHTML = '';
+    list.innerHTML = '';
 
     // Category header with arrows (only for commercial mode)
     if (App.state.mode === 'commercial') {
@@ -48,7 +49,7 @@ const ProjectNav = (() => {
       catRow.appendChild(prevArrow);
       catRow.appendChild(catLabel);
       catRow.appendChild(nextArrow);
-      content.appendChild(catRow);
+      list.appendChild(catRow);
     }
 
     // Project list
@@ -66,7 +67,7 @@ const ProjectNav = (() => {
         App.enterProject(proj.slug);
       });
 
-      content.appendChild(btn);
+      list.appendChild(btn);
     });
   }
 
@@ -75,8 +76,9 @@ const ProjectNav = (() => {
     idx = (idx + dir + categories.length) % categories.length;
     var newCat = categories[idx];
 
-    // Set state immediately so the nav list updates instantly
+    // Set state and rebuild immediately (no transition — nav covers everything)
     App.state.category = newCat;
+    App.state.collapsedProjects.clear();
     buildList();
 
     // Update color to match category
@@ -84,9 +86,12 @@ const ProjectNav = (() => {
       ColorWipe.setColor(categoryColors[newCat]);
     }
 
-    // Rebuild the home view behind the nav (transition plays underneath)
-    App.setCategory(newCat);
+    // Rebuild home view behind the nav (no transition needed)
+    App.state.projects = getFilteredProjects();
+    ScrollView.init(App.state.projects, App.state.config);
     Header.updateForHome();
+    Footer.updateActiveCategory();
+    Motifs.refresh();
   }
 
   function open(highlightSlug) {
