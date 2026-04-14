@@ -502,8 +502,8 @@ button {
 .scroll-item__img {
   width: 100%;
   display: block;
-  object-fit: cover;
-  height: 75dvh;
+  object-fit: contain;
+  height: auto;
   background: #111;
   transition: opacity 0.3s;
 }
@@ -918,5 +918,4 @@ button {
 }
 
 @media (min-width: 769px) {
-  .scroll-item__img { height: 80dvh; }
 }
