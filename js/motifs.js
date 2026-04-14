@@ -4,15 +4,17 @@
 
 const Motifs = (() => {
   const MOTIF_COUNT_TOTAL = 32;
-  const MOTIFS_PER_VIEW = 3; // reduced for performance
+  const MOTIFS_PER_VIEW = 5;
   const container = document.getElementById('motifs-layer');
 
-  // Screensaver-style animations — slow, wide travel, GPU-only transforms
+  // Screensaver-style animations — varied speeds and trajectories
   const animations = [
-    { name: 'screensaver-1', duration: '45s', timing: 'linear', direction: 'alternate' },
-    { name: 'screensaver-2', duration: '55s', timing: 'linear', direction: 'alternate' },
-    { name: 'screensaver-3', duration: '60s', timing: 'linear', direction: 'alternate' },
-    { name: 'screensaver-4', duration: '50s', timing: 'linear', direction: 'alternate' },
+    { name: 'screensaver-1', duration: '40s', timing: 'linear', direction: 'alternate' },
+    { name: 'screensaver-2', duration: '50s', timing: 'linear', direction: 'alternate' },
+    { name: 'screensaver-3', duration: '55s', timing: 'linear', direction: 'alternate' },
+    { name: 'screensaver-4', duration: '45s', timing: 'linear', direction: 'alternate' },
+    { name: 'screensaver-5', duration: '65s', timing: 'linear', direction: 'alternate' },
+    { name: 'screensaver-6', duration: '35s', timing: 'linear', direction: 'alternate' },
   ];
 
   let currentMotifs = [];

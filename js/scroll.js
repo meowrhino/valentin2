@@ -29,40 +29,36 @@ const ScrollView = (() => {
 
     if (!projects.length) return;
 
-    const gapDvh = (config.gap || 5) * 3; // TRIPLED gaps (15dvh with gap=5)
-    const gapBetweenProjects = gapDvh * 3;
+    // Read spacing from CSS custom properties
     const createTitleText = config.createTitleText;
 
-    // 30dvh padding at start
+    // Padding at start
     const startPad = document.createElement('div');
-    startPad.style.height = '30dvh';
+    startPad.style.height = 'var(--scroll-pad)';
     startPad.className = 'scroll-pad';
     content.appendChild(startPad);
 
     // Render all projects once, in order
     projects.forEach((proj, i) => {
-      const group = renderProjectGroup(proj, createTitleText, gapDvh);
+      const group = renderProjectGroup(proj, createTitleText);
       content.appendChild(group);
       projectElements.push(group);
 
       // Gap between projects with sentinel at midpoint for motif change
       if (i < projects.length - 1) {
-        const nextProj = projects[i + 1];
-        const halfGap = Math.floor(gapBetweenProjects / 2);
-
         const spacerTop = document.createElement('div');
-        spacerTop.style.height = halfGap + 'dvh';
+        spacerTop.style.height = 'calc(var(--gap-between) / 2)';
         content.appendChild(spacerTop);
 
         // Sentinel: invisible 1px div at midpoint — triggers motif/color change
         const sentinel = document.createElement('div');
         sentinel.className = 'gap-sentinel';
-        sentinel.dataset.nextSlug = nextProj.slug;
+        sentinel.dataset.nextSlug = projects[i + 1].slug;
         sentinel.style.height = '1px';
         content.appendChild(sentinel);
 
         const spacerBot = document.createElement('div');
-        spacerBot.style.height = halfGap + 'dvh';
+        spacerBot.style.height = 'calc(var(--gap-between) / 2)';
         content.appendChild(spacerBot);
       }
     });
@@ -72,10 +68,10 @@ const ScrollView = (() => {
     poolPtr = 0;
 
     // Ensure minimum fill
-    ensureMinFill(gapDvh, gapBetweenProjects, createTitleText);
+    ensureMinFill(createTitleText);
 
     // Setup scroll listener
-    enableInfiniteScroll(gapDvh, gapBetweenProjects, createTitleText);
+    enableInfiniteScroll(createTitleText);
 
     // Setup active project detection
     setupActiveDetection();
@@ -84,7 +80,7 @@ const ScrollView = (() => {
     host.scrollTop = 0;
   }
 
-  function renderProjectGroup(proj, createTitleText, gapDvh) {
+  function renderProjectGroup(proj, createTitleText) {
     const wrapper = document.createElement('div');
     wrapper.className = 'project-group-wrapper';
     wrapper.dataset.slug = proj.slug;
@@ -125,7 +121,7 @@ const ScrollView = (() => {
       // Inner gap between photos of same project
       if (idx < fotos.length - 1) {
         const innerSpacer = document.createElement('div');
-        innerSpacer.style.height = gapDvh + 'dvh';
+        innerSpacer.style.height = 'var(--gap-base)';
         imgContainer.appendChild(innerSpacer);
       }
     });
@@ -143,9 +139,10 @@ const ScrollView = (() => {
     const track = document.createElement('div');
     track.className = 'scroll-marquee__track';
 
-    const text = nombre.toUpperCase() + '          ';
-    // Need enough repetitions for seamless loop
-    const repeated = text.repeat(6);
+    // Wide spacing between iterations — no dots, just generous whitespace
+    const text = nombre.toUpperCase();
+    const spacer = '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0'; // 30 non-breaking spaces
+    const repeated = (text + spacer).repeat(4);
 
     // Two copies for seamless CSS animation
     const span1 = document.createElement('span');
@@ -171,44 +168,47 @@ const ScrollView = (() => {
 
   function toggleAccordion(slug, marqueeEl) {
     const isPaused = marqueeEl.classList.contains('scroll-marquee--paused');
+    // Find all wrappers and their marquees for this slug
+    const wrappers = content.querySelectorAll(`.project-group-wrapper[data-slug="${slug}"]`);
 
-    if (isPaused) {
-      // Expand
-      marqueeEl.classList.remove('scroll-marquee--paused');
-      App.state.collapsedProjects.delete(slug);
+    wrappers.forEach(wrapper => {
+      const group = wrapper.querySelector('.project-group');
+      const marq = wrapper.querySelector('.scroll-marquee');
+      if (!group) return;
 
-      // Find and expand all project groups with this slug
-      content.querySelectorAll(`.project-group[data-slug="${slug}"]`).forEach(group => {
+      if (isPaused) {
+        // Expand
+        if (marq) marq.classList.remove('scroll-marquee--paused');
         group.classList.remove('project-group--collapsed');
-        // Restore natural height
         group.style.maxHeight = group.scrollHeight + 'px';
         setTimeout(() => { group.style.maxHeight = ''; }, 600);
-      });
-    } else {
-      // Collapse
-      marqueeEl.classList.add('scroll-marquee--paused');
-      App.state.collapsedProjects.add(slug);
-
-      content.querySelectorAll(`.project-group[data-slug="${slug}"]`).forEach(group => {
+      } else {
+        // Collapse — marquee slides left, images collapse
+        if (marq) marq.classList.add('scroll-marquee--paused');
         group.style.maxHeight = group.scrollHeight + 'px';
-        // Force reflow
-        group.offsetHeight;
+        group.offsetHeight; // force reflow
         group.classList.add('project-group--collapsed');
-      });
+      }
+    });
+
+    if (isPaused) {
+      App.state.collapsedProjects.delete(slug);
+    } else {
+      App.state.collapsedProjects.add(slug);
     }
   }
 
   // ---- Infinite scroll mechanics ----
-  function ensureMinFill(gapDvh, gapBetweenProjects, createTitleText) {
+  function ensureMinFill(createTitleText) {
     const minHeight = host.clientHeight * FILL_FACTOR;
     let safety = 0;
     while (content.scrollHeight < minHeight && safety < 50) {
-      appendBatch(gapDvh, gapBetweenProjects, createTitleText);
+      appendBatch(createTitleText);
       safety++;
     }
   }
 
-  function appendBatch(gapDvh, gapBetweenProjects, createTitleText) {
+  function appendBatch(createTitleText) {
     const fragment = document.createDocumentFragment();
 
     for (let i = 0; i < BATCH_SIZE; i++) {
@@ -220,9 +220,8 @@ const ScrollView = (() => {
       const proj = pool[poolPtr++];
 
       // Spacer before each new project with sentinel at midpoint
-      const halfGap = Math.floor(gapBetweenProjects / 2);
       const spacerTop = document.createElement('div');
-      spacerTop.style.height = halfGap + 'dvh';
+      spacerTop.style.height = 'calc(var(--gap-between) / 2)';
       fragment.appendChild(spacerTop);
 
       const sentinel = document.createElement('div');
@@ -232,10 +231,10 @@ const ScrollView = (() => {
       fragment.appendChild(sentinel);
 
       const spacerBot = document.createElement('div');
-      spacerBot.style.height = halfGap + 'dvh';
+      spacerBot.style.height = 'calc(var(--gap-between) / 2)';
       fragment.appendChild(spacerBot);
 
-      const group = renderProjectGroup(proj, createTitleText, gapDvh);
+      const group = renderProjectGroup(proj, createTitleText);
 
       // If this project is currently collapsed, collapse the new instance too
       if (App.state.collapsedProjects.has(proj.slug)) {
@@ -264,8 +263,7 @@ const ScrollView = (() => {
     }
   }
 
-  function enableInfiniteScroll(gapDvh, gapBetweenProjects, createTitleText) {
-    // Remove previous listener if any
+  function enableInfiniteScroll(createTitleText) {
     if (scrollHandler) {
       host.removeEventListener('scroll', scrollHandler);
     }
@@ -274,7 +272,7 @@ const ScrollView = (() => {
     scrollHandler = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          checkAndAppend(gapDvh, gapBetweenProjects, createTitleText);
+          checkAndAppend(createTitleText);
           ticking = false;
         });
         ticking = true;
@@ -284,13 +282,13 @@ const ScrollView = (() => {
     scrollEnabled = true;
   }
 
-  function checkAndAppend(gapDvh, gapBetweenProjects, createTitleText) {
+  function checkAndAppend(createTitleText) {
     const { scrollTop, scrollHeight, clientHeight } = host;
     const remaining = scrollHeight - scrollTop - clientHeight;
     const threshold = scrollHeight * THRESHOLD;
 
     if (remaining < threshold) {
-      appendBatch(gapDvh, gapBetweenProjects, createTitleText);
+      appendBatch(createTitleText);
     }
   }
 

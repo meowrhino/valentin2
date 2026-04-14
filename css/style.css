@@ -15,6 +15,12 @@
 
   --transition-speed: 0.4s;
   --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing system — everything derives from --gap-base */
+  --gap-base: 15dvh;                          /* between photos of same project */
+  --gap-between: calc(var(--gap-base) * 3);   /* between different projects */
+  --gap-collapsed: calc(var(--gap-base) / 2); /* when marquee is minimized */
+  --scroll-pad: calc(var(--gap-base) * 2);    /* top/bottom padding = base × 2 */
 }
 
 /* ---- RESET ---- */
@@ -419,17 +425,25 @@ button {
   100% { transform: translateX(-50%); }
 }
 
-/* Marquee collapsed state */
+/* Marquee collapsed state — slides to left, stays put */
 .scroll-marquee--paused {
-  padding: 24px 0;
+  padding: 12px 16px;
 }
 
 .scroll-marquee--paused .scroll-marquee__track {
-  animation-play-state: paused;
+  animation: none;
+  transform: translateX(0);
+  transition: transform 0.5s var(--transition-ease);
+  justify-content: flex-start;
 }
 
 .scroll-marquee--paused .scroll-marquee__text {
   font-weight: 800;
+}
+
+/* Hide the duplicate span when paused (only show one instance, left-aligned) */
+.scroll-marquee--paused .scroll-marquee__text:nth-child(2) {
+  display: none;
 }
 
 /* ============================================
@@ -606,6 +620,23 @@ button {
   0%   { transform: translate(0, 0) rotate(0deg); }
   50%  { transform: translate(-200px, 250px) rotate(30deg); }
   100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Slow diagonal drift — very subtle, like dust */
+@keyframes screensaver-5 {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(150px, 180px) scale(1.03); }
+  66%  { transform: translate(-80px, 100px) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* Figure-eight path — organic, looping */
+@keyframes screensaver-6 {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(180px, -120px); }
+  50%  { transform: translate(0, 0); }
+  75%  { transform: translate(-180px, 120px); }
+  100% { transform: translate(0, 0); }
 }
 
 /* ============================================
