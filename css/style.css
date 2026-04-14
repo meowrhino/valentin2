@@ -522,6 +522,12 @@ button {
    TRANSITION GRID
    ============================================ */
 
+/* Fullscreen variant: grid covers entire viewport including header/footer */
+.transition-grid--fullscreen {
+  top: 0;
+  bottom: 0;
+}
+
 .transition-grid__cell {
   background: var(--color-bg);
   opacity: 0;

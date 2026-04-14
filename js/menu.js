@@ -85,7 +85,6 @@ const Menu = (() => {
         if (cat !== App.state.category) {
           App.setCategory(cat);
           catItems.forEach(ci => ci.classList.toggle('menu-modal__item--active', ci.dataset.category === cat));
-          close();
         }
       });
     });

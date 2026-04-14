@@ -10,24 +10,37 @@ const Footer = (() => {
   const centerBtn = document.getElementById('footer-center');
 
   function updateForHome() {
-    centerBtn.textContent = '';
-    centerBtn.onclick = null;
-  }
-
-  function updateForProject() {
-    centerBtn.textContent = 'BACK TO HOME';
-    centerBtn.onclick = () => App.exitProject();
-  }
-
-  function updateActiveProject(nombre) {
-    if (App.state.view === 'home' && nombre) {
-      centerBtn.textContent = nombre.toUpperCase();
-      // In home, clicking footer project name does nothing special (just info)
+    if (App.state.mode === 'personal') {
+      centerBtn.textContent = 'BACK HOME';
+      centerBtn.onclick = () => {
+        App.state.mode = 'commercial';
+        App.state.category = 'all';
+        App.rebuildHome();
+      };
+    } else if (App.state.category !== 'all') {
+      centerBtn.textContent = 'BACK TO ALL';
+      centerBtn.onclick = () => App.setCategory('all');
+    } else {
+      centerBtn.textContent = '';
       centerBtn.onclick = null;
     }
   }
 
-  function updateActiveCategory() {}
+  function updateForProject() {
+    centerBtn.textContent = 'BACK HOME';
+    centerBtn.onclick = () => App.exitProject();
+  }
+
+  function updateActiveProject(nombre) {
+    if (App.state.view === 'home' && App.state.mode === 'commercial' && App.state.category === 'all' && nombre) {
+      centerBtn.textContent = nombre.toUpperCase();
+      centerBtn.onclick = null;
+    }
+  }
+
+  function updateActiveCategory() {
+    updateForHome();
+  }
 
   function init() {
     prevBtn.addEventListener('click', () => {

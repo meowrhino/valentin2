@@ -12,17 +12,21 @@ const Header = (() => {
 
   function updateForHome() {
     nameEl.textContent = 'VALENTIN BARRIO';
-    // Show current category on the left
     const cat = App.state.category === 'all'
-      ? (App.state.mode === 'commercial' ? 'COMERCIAL' : 'PERSONAL')
+      ? (App.state.mode === 'commercial' ? 'ALL' : 'PERSONAL')
       : App.state.category.toUpperCase();
     categoryEl.textContent = cat;
   }
 
   function updateForProject() {
-    // Header stays the same — no marquee, just VALENTIN BARRIO
     nameEl.textContent = 'VALENTIN BARRIO';
-    categoryEl.textContent = '';
+    const slug = App.state.activeProjectSlug;
+    if (App.state.data && App.state.data.about && App.state.data.about.slug === slug) {
+      categoryEl.textContent = 'ABOUT';
+    } else {
+      const proj = App.findProject(slug);
+      categoryEl.textContent = proj ? proj.nombre.toUpperCase() : '';
+    }
   }
 
   function updateActiveProject(nombre) {
