@@ -4,9 +4,9 @@
 
 const App = (() => {
   const state = {
-    view: 'home',           // 'home' | 'project'
-    mode: 'commercial',     // 'commercial' | 'personal'
-    category: 'all',        // 'all' | 'club' | 'festival' | 'editorial'
+    view: 'home',
+    mode: 'commercial',
+    category: 'all',
     activeProjectSlug: null,
     collapsedProjects: new Set(),
     projects: [],
@@ -21,16 +21,16 @@ const App = (() => {
 
   async function init() {
     try {
-      const res = await fetch(`${Utils.BASE}/data.json`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await fetch(Utils.BASE + '/data.json');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       state.data = await res.json();
     } catch (err) {
       console.error('Failed to load data.json:', err);
       return;
     }
 
-    state.config.createTitleText = state.data.createTitleText ?? true;
-    state.config.gap = state.data.gap ?? 5;
+    state.config.createTitleText = state.data.createTitleText !== false;
+    state.config.gap = state.data.gap || 5;
     state.allCommercial = state.data.projects || [];
     state.allPersonal = state.data.personalProjects || [];
 
@@ -39,6 +39,7 @@ const App = (() => {
     Header.init();
     Menu.init();
     Footer.init();
+    Lightbox.init();
     Motifs.init();
     Transitions.buildGrid();
 
@@ -47,7 +48,7 @@ const App = (() => {
     if (path && path !== '' && path !== 'index.html') {
       const proj = findProjectBySlug(path);
       if (proj) {
-        state.mode = state.allPersonal.some(p => p.slug === proj.slug) ? 'personal' : 'commercial';
+        state.mode = state.allPersonal.some(function(p) { return p.slug === proj.slug; }) ? 'personal' : 'commercial';
         updateProjects();
         showHome(false);
         enterProject(proj.slug, false);
@@ -61,25 +62,23 @@ const App = (() => {
 
   function updateProjects() {
     const source = state.mode === 'commercial' ? state.allCommercial : state.allPersonal;
-
     if (state.mode === 'personal' || state.category === 'all') {
-      state.projects = [...source];
+      state.projects = source.slice();
     } else {
-      state.projects = source.filter(p => p.category === state.category);
+      state.projects = source.filter(function(p) { return p.category === state.category; });
     }
   }
 
   function findProjectBySlug(slug) {
-    return state.allCommercial.find(p => p.slug === slug) ||
-           state.allPersonal.find(p => p.slug === slug) ||
+    return state.allCommercial.find(function(p) { return p.slug === slug; }) ||
+           state.allPersonal.find(function(p) { return p.slug === slug; }) ||
            (state.data.about && state.data.about.slug === slug ? state.data.about : null);
   }
 
-  function findProject(slug) {
-    return findProjectBySlug(slug);
-  }
+  function findProject(slug) { return findProjectBySlug(slug); }
 
-  function showHome(pushState = true) {
+  function showHome(pushState) {
+    if (pushState === undefined) pushState = true;
     state.view = 'home';
     state.activeProjectSlug = null;
 
@@ -95,7 +94,8 @@ const App = (() => {
     }
   }
 
-  function enterProject(slug, withTransition = true) {
+  function enterProject(slug, withTransition) {
+    if (withTransition === undefined) withTransition = true;
     if (!slug) return;
 
     const proj = findProject(slug);
@@ -104,15 +104,14 @@ const App = (() => {
     state.view = 'project';
     state.activeProjectSlug = slug;
 
-    const doEnter = () => {
+    var doEnter = function() {
       ScrollView.hide();
       ProjectView.show(proj);
-      Header.showProjectMarquee(proj.nombre);
+      Header.updateForProject();
       Footer.updateForProject();
       ColorWipe.setColor(proj.color);
       Motifs.refresh();
-
-      history.pushState({ view: 'project', slug }, '', Utils.BASE + '/' + slug);
+      history.pushState({ view: 'project', slug: slug }, '', Utils.BASE + '/' + slug);
     };
 
     if (withTransition) {
@@ -123,19 +122,15 @@ const App = (() => {
   }
 
   function exitProject() {
-    const doExit = () => {
+    Transitions.run(function() {
       state.view = 'home';
       ProjectView.hide();
       ScrollView.show();
-      Header.hideProjectMarquee();
       Header.updateForHome();
       Footer.updateForHome();
       Motifs.refresh();
-
       history.pushState({ view: 'home' }, '', Utils.BASE + '/');
-    };
-
-    Transitions.run(doExit);
+    });
   }
 
   function toggleMode() {
@@ -153,21 +148,22 @@ const App = (() => {
     updateProjects();
     ScrollView.init(state.projects, state.config);
     Footer.updateActiveCategory();
+    Header.updateForHome();
     Motifs.refresh();
   }
 
   function prevProject() {
-    const source = state.mode === 'commercial' ? state.allCommercial : state.allPersonal;
-    const filtered = state.category === 'all' ? source : source.filter(p => p.category === state.category);
-    const idx = filtered.findIndex(p => p.slug === state.activeProjectSlug);
+    var source = state.mode === 'commercial' ? state.allCommercial : state.allPersonal;
+    var filtered = state.category === 'all' ? source : source.filter(function(p) { return p.category === state.category; });
+    var idx = filtered.findIndex(function(p) { return p.slug === state.activeProjectSlug; });
     if (idx > 0) {
-      const prev = filtered[idx - 1];
-      Transitions.run(() => {
+      var prev = filtered[idx - 1];
+      Transitions.run(function() {
         ProjectView.hide();
-        const proj = findProject(prev.slug);
+        var proj = findProject(prev.slug);
         state.activeProjectSlug = prev.slug;
         ProjectView.show(proj);
-        Header.showProjectMarquee(proj.nombre);
+        Header.updateForProject();
         ColorWipe.setColor(proj.color);
         history.pushState({ view: 'project', slug: prev.slug }, '', Utils.BASE + '/' + prev.slug);
       });
@@ -175,33 +171,33 @@ const App = (() => {
   }
 
   function nextProject() {
-    const source = state.mode === 'commercial' ? state.allCommercial : state.allPersonal;
-    const filtered = state.category === 'all' ? source : source.filter(p => p.category === state.category);
-    const idx = filtered.findIndex(p => p.slug === state.activeProjectSlug);
+    var source = state.mode === 'commercial' ? state.allCommercial : state.allPersonal;
+    var filtered = state.category === 'all' ? source : source.filter(function(p) { return p.category === state.category; });
+    var idx = filtered.findIndex(function(p) { return p.slug === state.activeProjectSlug; });
     if (idx < filtered.length - 1) {
-      const next = filtered[idx + 1];
-      Transitions.run(() => {
+      var next = filtered[idx + 1];
+      Transitions.run(function() {
         ProjectView.hide();
-        const proj = findProject(next.slug);
+        var proj = findProject(next.slug);
         state.activeProjectSlug = next.slug;
         ProjectView.show(proj);
-        Header.showProjectMarquee(proj.nombre);
+        Header.updateForProject();
         ColorWipe.setColor(proj.color);
         history.pushState({ view: 'project', slug: next.slug }, '', Utils.BASE + '/' + next.slug);
       });
     }
   }
 
-  // Handle browser back/forward
-  window.addEventListener('popstate', (e) => {
+  // Browser back/forward
+  window.addEventListener('popstate', function(e) {
     if (e.state && e.state.view === 'project' && e.state.slug) {
-      const proj = findProject(e.state.slug);
+      var proj = findProject(e.state.slug);
       if (proj) {
         state.view = 'project';
         state.activeProjectSlug = e.state.slug;
         ScrollView.hide();
         ProjectView.show(proj);
-        Header.showProjectMarquee(proj.nombre);
+        Header.updateForProject();
         Footer.updateForProject();
         ColorWipe.setColor(proj.color);
       }
@@ -209,13 +205,11 @@ const App = (() => {
       state.view = 'home';
       ProjectView.hide();
       ScrollView.show();
-      Header.hideProjectMarquee();
       Header.updateForHome();
       Footer.updateForHome();
     }
   });
 
-  // Boot
   document.addEventListener('DOMContentLoaded', init);
 
   function rebuildHome() {
@@ -223,18 +217,13 @@ const App = (() => {
     updateProjects();
     ScrollView.init(state.projects, state.config);
     Footer.updateActiveCategory();
+    Header.updateForHome();
     Motifs.refresh();
   }
 
   return {
-    state,
-    findProject,
-    enterProject,
-    exitProject,
-    toggleMode,
-    setCategory,
-    rebuildHome,
-    prevProject,
-    nextProject
+    state, findProject, enterProject, exitProject,
+    toggleMode, setCategory, rebuildHome,
+    prevProject, nextProject
   };
 })();

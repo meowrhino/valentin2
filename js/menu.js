@@ -1,6 +1,7 @@
 /* ============================================
-   MENU — Modal, mode/category switching, animations
-   Extracted from header.js for cleaner separation
+   MENU — Modal with mode/category switching
+   Always enters from bottom, closes with "carrerilla" up.
+   Category hover changes text color only.
    ============================================ */
 
 const Menu = (() => {
@@ -10,16 +11,9 @@ const Menu = (() => {
   const menuCategories = document.getElementById('menu-categories');
   const modeItems = menuModal.querySelectorAll('[data-mode]');
   const catItems = menuModal.querySelectorAll('[data-category]');
-
-  // All close buttons (4 corners)
   const closeButtons = menuModal.querySelectorAll('.menu-modal__close');
 
-  // Track which direction the menu entered from
-  let openDirection = 'bottom'; // 'bottom' | 'left'
-
-  function open(direction = 'bottom') {
-    openDirection = direction;
-
+  function open() {
     // Sync active states
     modeItems.forEach(item => {
       item.classList.toggle('menu-modal__item--active', item.dataset.mode === App.state.mode);
@@ -29,23 +23,19 @@ const Menu = (() => {
     });
     menuCategories.style.display = App.state.mode === 'personal' ? 'none' : '';
 
-    // Sync motif style buttons
+    // Sync motif buttons
     const currentMotif = Settings.get('motifStyle');
     menuModal.querySelectorAll('.menu-modal__motif-btn').forEach(b => {
       b.classList.toggle('menu-modal__motif-btn--active', b.dataset.motif === currentMotif);
     });
 
-    // Set open direction class
-    menuModal.classList.remove('menu-modal--closing', 'menu-modal--from-left', 'menu-modal--from-bottom');
-    menuModal.classList.add(direction === 'left' ? 'menu-modal--from-left' : 'menu-modal--from-bottom');
-
-    // Force reflow before removing hidden
+    menuModal.classList.remove('menu-modal--closing');
+    // Force reflow
     menuModal.offsetHeight;
     menuModal.classList.remove('menu-modal--hidden');
   }
 
   function close() {
-    // Close in the reverse direction it opened
     menuModal.classList.add('menu-modal--closing');
 
     const onEnd = () => {
@@ -53,7 +43,6 @@ const Menu = (() => {
       menuModal.classList.add('menu-modal--hidden');
       menuModal.classList.remove('menu-modal--closing');
     };
-
     menuContent.addEventListener('transitionend', onEnd);
 
     // Safety fallback
@@ -66,12 +55,8 @@ const Menu = (() => {
   }
 
   function init() {
-    // Close buttons (all 4 corners)
-    closeButtons.forEach(btn => {
-      btn.addEventListener('click', close);
-    });
-
-    // Backdrop click closes
+    // Close buttons
+    closeButtons.forEach(btn => btn.addEventListener('click', close));
     menuBackdrop.addEventListener('click', close);
 
     // Mode switching
@@ -93,7 +78,7 @@ const Menu = (() => {
       });
     });
 
-    // Category switching — closes with left direction then reopens view
+    // Category switching
     catItems.forEach(item => {
       item.addEventListener('click', () => {
         const cat = item.dataset.category;
@@ -102,26 +87,6 @@ const Menu = (() => {
           catItems.forEach(ci => ci.classList.toggle('menu-modal__item--active', ci.dataset.category === cat));
           close();
         }
-      });
-    });
-
-    // Category hover — reveal color
-    catItems.forEach(item => {
-      item.addEventListener('mouseenter', () => {
-        const cat = item.dataset.category;
-        let color = null;
-        if (cat === 'club') color = 'var(--color-club)';
-        else if (cat === 'festival') color = 'var(--color-festival)';
-        else if (cat === 'editorial') color = 'var(--color-editorial)';
-
-        if (color) {
-          menuContent.style.setProperty('--menu-hover-color', color);
-          menuContent.classList.add('menu-modal__content--color-reveal');
-        }
-      });
-
-      item.addEventListener('mouseleave', () => {
-        menuContent.classList.remove('menu-modal__content--color-reveal');
       });
     });
 

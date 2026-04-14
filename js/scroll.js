@@ -10,7 +10,6 @@ const ScrollView = (() => {
   const THRESHOLD = 0.2;
   const FILL_FACTOR = 1.2;
   const MARQUEE_VARIANTS = ['scroll-marquee--v1', 'scroll-marquee--v2', 'scroll-marquee--v3', 'scroll-marquee--v4'];
-  const MARQUEE_REPEATS = 10; // was 4 — many more instances for full coverage
 
   let pool = [];
   let poolPtr = 0;
@@ -23,7 +22,8 @@ const ScrollView = (() => {
   let lastScrollTop = 0;
 
   // ---- Smooth scroll with ease-in-out ----
-  function smoothScrollTo(target, duration = 900) {
+  function smoothScrollTo(target, duration) {
+    duration = duration || 900;
     const startY = host.scrollTop;
     const targetRect = target.getBoundingClientRect();
     const hostRect = host.getBoundingClientRect();
@@ -32,24 +32,16 @@ const ScrollView = (() => {
     const distance = endY - startY;
     let startTime = null;
 
-    // Ease-in-out cubic
     function easeInOutCubic(t) {
-      return t < 0.5
-        ? 4 * t * t * t
-        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     function step(timestamp) {
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = easeInOutCubic(progress);
-
-      host.scrollTop = startY + distance * eased;
-
-      if (progress < 1) {
-        requestAnimationFrame(step);
-      }
+      host.scrollTop = startY + distance * easeInOutCubic(progress);
+      if (progress < 1) requestAnimationFrame(step);
     }
 
     requestAnimationFrame(step);
@@ -71,13 +63,11 @@ const ScrollView = (() => {
     startPad.className = 'scroll-pad';
     content.appendChild(startPad);
 
-    // Render all projects once, in order
     projects.forEach((proj, i) => {
       const group = renderProjectGroup(proj, createTitleText);
       content.appendChild(group);
       projectElements.push(group);
 
-      // Gap between projects with sentinel at midpoint for motif change
       if (i < projects.length - 1) {
         const spacerTop = document.createElement('div');
         spacerTop.style.height = 'calc(var(--gap-between) / 2)';
@@ -95,14 +85,12 @@ const ScrollView = (() => {
       }
     });
 
-    // Build pool for infinite scroll
     pool = Utils.shuffle([...projects, ...projects, ...projects]);
     poolPtr = 0;
 
     ensureMinFill(createTitleText);
     enableInfiniteScroll(createTitleText);
     setupActiveDetection();
-
     host.scrollTop = 0;
   }
 
@@ -133,7 +121,13 @@ const ScrollView = (() => {
       Utils.lazyLoad(img, host);
 
       item.appendChild(img);
-      item.addEventListener('click', () => App.enterProject(proj.slug));
+
+      // Click image → open in lightbox
+      item.addEventListener('click', () => {
+        const allImages = fotos.map(n => Utils.projectImagePath(proj.slug, n));
+        Lightbox.open(allImages, idx);
+      });
+
       imgContainer.appendChild(item);
 
       if (idx < fotos.length - 1) {
@@ -150,69 +144,39 @@ const ScrollView = (() => {
   function createScrollMarquee(nombre, slug) {
     const marquee = document.createElement('div');
     const variant = Utils.randPick(MARQUEE_VARIANTS);
-    marquee.className = `scroll-marquee ${variant}`;
+    marquee.className = 'scroll-marquee ' + variant;
     marquee.dataset.slug = slug;
 
     const track = document.createElement('div');
     track.className = 'scroll-marquee__track';
 
-    // Clean text — spacing handled entirely by CSS padding-right
     const text = nombre.toUpperCase();
+    // Wide spacing via CSS padding-right. Repeat 30x inside each span for full coverage.
+    // Two identical spans side-by-side = seamless loop with translateX(-50%)
+    const repeated = new Array(30).fill(text).join(' \u00A0 ');
 
-    // Two groups of individual spans for seamless CSS animation
-    // Each span = one instance of the name, CSS padding-right creates uniform gaps
-    for (let g = 0; g < 2; g++) {
-      for (let i = 0; i < MARQUEE_REPEATS; i++) {
-        const span = document.createElement('span');
-        span.className = 'scroll-marquee__text';
-        span.textContent = text;
-        track.appendChild(span);
-      }
-    }
+    var span1 = document.createElement('span');
+    span1.className = 'scroll-marquee__text';
+    span1.textContent = repeated;
+    track.appendChild(span1);
+
+    var span2 = document.createElement('span');
+    span2.className = 'scroll-marquee__text';
+    span2.textContent = repeated;
+    track.appendChild(span2);
 
     marquee.appendChild(track);
 
-    // Accordion toggle
+    // Click marquee → enter project (not toggle accordion)
     marquee.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleAccordion(slug, marquee);
+      App.enterProject(slug);
     });
 
     return marquee;
   }
 
-  function toggleAccordion(slug, marqueeEl) {
-    const isPaused = marqueeEl.classList.contains('scroll-marquee--paused');
-    const wrappers = content.querySelectorAll(`.project-group-wrapper[data-slug="${slug}"]`);
-
-    wrappers.forEach(wrapper => {
-      const group = wrapper.querySelector('.project-group');
-      const marq = wrapper.querySelector('.scroll-marquee');
-      if (!group) return;
-
-      if (isPaused) {
-        // Expand
-        if (marq) marq.classList.remove('scroll-marquee--paused');
-        group.classList.remove('project-group--collapsed');
-        group.style.maxHeight = group.scrollHeight + 'px';
-        setTimeout(() => { group.style.maxHeight = ''; }, 600);
-      } else {
-        // Collapse — marquee slides left, images collapse
-        if (marq) marq.classList.add('scroll-marquee--paused');
-        group.style.maxHeight = group.scrollHeight + 'px';
-        group.offsetHeight; // force reflow
-        group.classList.add('project-group--collapsed');
-      }
-    });
-
-    if (isPaused) {
-      App.state.collapsedProjects.delete(slug);
-    } else {
-      App.state.collapsedProjects.add(slug);
-    }
-  }
-
-  // ---- Infinite scroll mechanics ----
+  // ---- Infinite scroll ----
   function ensureMinFill(createTitleText) {
     const minHeight = host.clientHeight * FILL_FACTOR;
     let safety = 0;
@@ -252,8 +216,8 @@ const ScrollView = (() => {
       if (App.state.collapsedProjects.has(proj.slug)) {
         const imgGroup = group.querySelector('.project-group');
         if (imgGroup) imgGroup.classList.add('project-group--collapsed');
-        const marquee = group.querySelector('.scroll-marquee');
-        if (marquee) marquee.classList.add('scroll-marquee--paused');
+        const mq = group.querySelector('.scroll-marquee');
+        if (mq) mq.classList.add('scroll-marquee--paused');
       }
 
       fragment.appendChild(group);
@@ -274,9 +238,7 @@ const ScrollView = (() => {
   }
 
   function enableInfiniteScroll(createTitleText) {
-    if (scrollHandler) {
-      host.removeEventListener('scroll', scrollHandler);
-    }
+    if (scrollHandler) host.removeEventListener('scroll', scrollHandler);
 
     let ticking = false;
     scrollHandler = () => {
@@ -294,10 +256,7 @@ const ScrollView = (() => {
 
   function checkAndAppend(createTitleText) {
     const { scrollTop, scrollHeight, clientHeight } = host;
-    const remaining = scrollHeight - scrollTop - clientHeight;
-    const threshold = scrollHeight * THRESHOLD;
-
-    if (remaining < threshold) {
+    if (scrollHeight - scrollTop - clientHeight < scrollHeight * THRESHOLD) {
       appendBatch(createTitleText);
     }
   }
@@ -356,7 +315,7 @@ const ScrollView = (() => {
     });
   }
 
-  // ---- Navigation (jump between projects with ease-in-out) ----
+  // ---- Navigation ----
   function getVisibleProjectWrappers() {
     return Array.from(content.querySelectorAll('.project-group-wrapper'));
   }
@@ -365,44 +324,34 @@ const ScrollView = (() => {
     const wrappers = getVisibleProjectWrappers();
     const hostRect = host.getBoundingClientRect();
     const centerY = hostRect.top + hostRect.height / 2;
-
     let closestIdx = 0;
     let closestDist = Infinity;
 
     wrappers.forEach((wrapper, i) => {
       const rect = wrapper.getBoundingClientRect();
-      const wrapperCenter = rect.top + rect.height / 2;
-      const dist = Math.abs(wrapperCenter - centerY);
+      const dist = Math.abs(rect.top + rect.height / 2 - centerY);
       if (dist < closestDist) {
         closestDist = dist;
         closestIdx = i;
       }
     });
-
     return closestIdx;
   }
 
   function prevProject() {
     const wrappers = getVisibleProjectWrappers();
     const idx = getCurrentIndex();
-    if (idx > 0) {
-      smoothScrollTo(wrappers[idx - 1], 900);
-    }
+    if (idx > 0) smoothScrollTo(wrappers[idx - 1], 900);
   }
 
   function nextProject() {
     const wrappers = getVisibleProjectWrappers();
     const idx = getCurrentIndex();
-    if (idx < wrappers.length - 1) {
-      smoothScrollTo(wrappers[idx + 1], 900);
-    }
+    if (idx < wrappers.length - 1) smoothScrollTo(wrappers[idx + 1], 900);
   }
 
   function destroy() {
-    if (scrollHandler) {
-      host.removeEventListener('scroll', scrollHandler);
-      scrollHandler = null;
-    }
+    if (scrollHandler) { host.removeEventListener('scroll', scrollHandler); scrollHandler = null; }
     scrollEnabled = false;
     if (activeObserver) { activeObserver.disconnect(); activeObserver = null; }
     if (sentinelObserver) { sentinelObserver.disconnect(); sentinelObserver = null; }
@@ -417,18 +366,7 @@ const ScrollView = (() => {
     host.classList.remove('project-host--hidden');
   }
 
-  function hide() {
-    host.style.display = 'none';
-  }
+  function hide() { host.style.display = 'none'; }
 
-  return {
-    init,
-    destroy,
-    show,
-    hide,
-    prevProject,
-    nextProject,
-    getCurrentIndex,
-    getVisibleProjectWrappers
-  };
+  return { init, destroy, show, hide, prevProject, nextProject, getCurrentIndex, getVisibleProjectWrappers };
 })();

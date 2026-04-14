@@ -11,31 +11,26 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Z-1: Motivos flotantes (behind everything) -->
+  <!-- Z-1: Motivos flotantes -->
   <div id="motifs-layer"></div>
 
-  <!-- Color layers (behind header/footer, for center-wipe effect) -->
-  <div id="color-layer-header" class="color-layer color-layer--header"></div>
-  <div id="color-layer-footer" class="color-layer color-layer--footer"></div>
-
-  <!-- Z-3: Header -->
-  <header id="header">
-    <div class="header__left"></div>
-    <div class="header__center">
-      <span id="header-name">VALENTIN BARRIO</span>
-    </div>
-    <div class="header__right">
-      <button id="menu-toggle" class="menu-toggle" aria-label="Open menu">MENU</button>
-    </div>
-    <!-- Marquee for project view (hidden by default) -->
-    <div id="header-marquee" class="header__marquee header__marquee--hidden">
-      <div class="marquee__track">
-        <span class="marquee__text"></span>
+  <!-- Z-3: Header with blend-mode "hole" system -->
+  <div class="bar-wrapper bar-wrapper--top">
+    <div class="bar-color" id="header-color"></div>
+    <header id="header" class="bar">
+      <div class="bar__left">
+        <button id="header-category" class="bar__label" aria-label="Open menu"></button>
       </div>
-    </div>
-  </header>
+      <div class="bar__center">
+        <span id="header-name" class="bar__name">VALENTIN BARRIO</span>
+      </div>
+      <div class="bar__right">
+        <button id="menu-toggle" class="bar__label" aria-label="Open menu">MENU</button>
+      </div>
+    </header>
+  </div>
 
-  <!-- Z-2: Scroll content area -->
+  <!-- Z-2: Scroll content area (home) -->
   <main id="scroll-host" class="scroll-host">
     <div id="scroll-content"></div>
   </main>
@@ -45,26 +40,39 @@
     <div id="project-content"></div>
   </main>
 
-  <!-- Z-3: Footer (arrows + project name center) -->
-  <footer id="footer">
-    <div class="footer__nav">
-      <button id="nav-prev" class="footer__arrow">&lt;</button>
-      <button id="footer-project-name" class="footer__project-name"></button>
-      <button id="nav-next" class="footer__arrow">&gt;</button>
-    </div>
-  </footer>
+  <!-- Z-3: Footer with blend-mode "hole" system -->
+  <div class="bar-wrapper bar-wrapper--bottom">
+    <div class="bar-color" id="footer-color"></div>
+    <footer id="footer" class="bar">
+      <div class="bar__left">
+        <button id="nav-prev" class="bar__arrow">&lt;</button>
+      </div>
+      <div class="bar__center">
+        <button id="footer-center" class="bar__label"></button>
+      </div>
+      <div class="bar__right">
+        <button id="nav-next" class="bar__arrow">&gt;</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Z-15: Lightbox (fullscreen image viewer) -->
+  <div id="lightbox" class="lightbox lightbox--hidden">
+    <button class="lightbox__close lightbox__close--tl" aria-label="Close">&times;</button>
+    <button class="lightbox__close lightbox__close--tr" aria-label="Close">&times;</button>
+    <button class="lightbox__close lightbox__close--bl" aria-label="Close">&times;</button>
+    <button class="lightbox__close lightbox__close--br" aria-label="Close">&times;</button>
+    <img class="lightbox__img" alt="" />
+  </div>
 
   <!-- Z-20: Menu modal -->
-  <div id="menu-modal" class="menu-modal menu-modal--hidden menu-modal--from-bottom">
+  <div id="menu-modal" class="menu-modal menu-modal--hidden">
     <div class="menu-modal__backdrop"></div>
     <div class="menu-modal__content">
-      <!-- X close buttons in all 4 corners -->
       <button class="menu-modal__close menu-modal__close--tl" aria-label="Close">&times;</button>
       <button class="menu-modal__close menu-modal__close--tr" aria-label="Close">&times;</button>
       <button class="menu-modal__close menu-modal__close--bl" aria-label="Close">&times;</button>
       <button class="menu-modal__close menu-modal__close--br" aria-label="Close">&times;</button>
-      <!-- Color reveal layer for hover -->
-      <div class="menu-modal__color-layer"></div>
       <div class="menu-modal__section">
         <button class="menu-modal__item menu-modal__item--active" data-mode="commercial">COMERCIAL</button>
         <button class="menu-modal__item" data-mode="personal">PERSONAL</button>
@@ -75,7 +83,6 @@
         <button class="menu-modal__item" data-category="festival">FESTIVAL</button>
         <button class="menu-modal__item" data-category="editorial">EDITORIAL</button>
       </div>
-      <!-- Motif style selector inside menu -->
       <div class="menu-modal__section menu-modal__motifs">
         <span class="menu-modal__motifs-label">MOTIFS</span>
         <div class="menu-modal__motifs-options">
@@ -89,27 +96,8 @@
     </div>
   </div>
 
-  <!-- Z-10: Transition grid overlay -->
+  <!-- Z-10: Transition grid overlay (content area only) -->
   <div id="transition-grid" class="transition-grid"></div>
-
-  <!-- Settings panel (motif styles) -->
-  <div id="settings-panel" class="settings-panel settings-panel--hidden">
-    <div class="settings-panel__header">
-      <span>SETTINGS</span>
-      <button class="settings-panel__close">&times;</button>
-    </div>
-    <div class="settings-panel__body">
-      <div class="settings-panel__group">
-        <label class="settings-panel__label">MOTIF STYLE</label>
-        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="organic"> Flotacion organica</label>
-        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="drift"> Deriva lenta</label>
-        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="breath"> Respiracion</label>
-        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="orbital"> Orbital</label>
-        <label class="settings-panel__radio"><input type="radio" name="motif-style" value="mixed" checked> Mixto</label>
-      </div>
-    </div>
-  </div>
-  <button id="settings-toggle" class="settings-toggle" aria-label="Settings">&#9881;</button>
 
   <script src="js/utils.js"></script>
   <script src="js/color-wipe.js"></script>
@@ -119,6 +107,7 @@
   <script src="js/header.js"></script>
   <script src="js/menu.js"></script>
   <script src="js/footer.js"></script>
+  <script src="js/lightbox.js"></script>
   <script src="js/scroll.js"></script>
   <script src="js/project.js"></script>
   <script src="js/app.js"></script>
