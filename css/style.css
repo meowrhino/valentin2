@@ -126,7 +126,10 @@ button {
 
 .transition-grid {
   position: fixed;
-  inset: 0;
+  top: var(--header-h);
+  left: 0;
+  right: 0;
+  bottom: var(--footer-h);
   z-index: 10;
   pointer-events: none;
   display: grid;
@@ -429,6 +432,48 @@ button {
 }
 
 /* No dots — removed */
+
+/* Motif style selector in menu */
+.menu-modal__motifs {
+  margin-top: 0.5rem;
+}
+
+.menu-modal__motifs-label {
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.3;
+  display: block;
+  text-align: center;
+  margin-bottom: 0.4rem;
+}
+
+.menu-modal__motifs-options {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.menu-modal__motif-btn {
+  font-weight: 300;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+  padding: 2px 0;
+}
+
+.menu-modal__motif-btn:hover {
+  opacity: 0.7;
+}
+
+.menu-modal__motif-btn--active {
+  font-weight: 700;
+  opacity: 1;
+}
 
 /* ============================================
    SCROLL CONTENT — HOME

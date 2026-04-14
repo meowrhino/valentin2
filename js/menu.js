@@ -29,6 +29,12 @@ const Menu = (() => {
     });
     menuCategories.style.display = App.state.mode === 'personal' ? 'none' : '';
 
+    // Sync motif style buttons
+    const currentMotif = Settings.get('motifStyle');
+    menuModal.querySelectorAll('.menu-modal__motif-btn').forEach(b => {
+      b.classList.toggle('menu-modal__motif-btn--active', b.dataset.motif === currentMotif);
+    });
+
     // Set open direction class
     menuModal.classList.remove('menu-modal--closing', 'menu-modal--from-left', 'menu-modal--from-bottom');
     menuModal.classList.add(direction === 'left' ? 'menu-modal--from-left' : 'menu-modal--from-bottom');
@@ -116,6 +122,17 @@ const Menu = (() => {
 
       item.addEventListener('mouseleave', () => {
         menuContent.classList.remove('menu-modal__content--color-reveal');
+      });
+    });
+
+    // Motif style buttons
+    const motifBtns = menuModal.querySelectorAll('.menu-modal__motif-btn');
+    motifBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const style = btn.dataset.motif;
+        Settings.set('motifStyle', style);
+        motifBtns.forEach(b => b.classList.toggle('menu-modal__motif-btn--active', b.dataset.motif === style));
+        Motifs.refresh();
       });
     });
 

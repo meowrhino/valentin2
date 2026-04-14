@@ -1,15 +1,20 @@
 /* ============================================
    TRANSITIONS — 8x8 Grid blackout/reveal (smoother)
+   Grid only covers content area (between header/footer).
+   Header/footer do a soft crossfade independently.
    ============================================ */
 
 const Transitions = (() => {
   const grid = document.getElementById('transition-grid');
+  const header = document.getElementById('header');
+  const footer = document.getElementById('footer');
   const CELLS = 64;
   const STAGGER_MS = 8;
   const CELL_FADE_MS = 150;
   const REVEAL_STAGGER_MS = 14;
   const REVEAL_FADE_MS = 450;
   const BLACK_PAUSE_MS = 250;
+  const HEADER_FADE_MS = 400; // soft crossfade for header/footer
 
   let cells = [];
   let running = false;
@@ -34,17 +39,21 @@ const Transitions = (() => {
       c.style.transition = 'none';
       c.style.opacity = '0';
     });
-    // Force reflow then restore transition
     grid.offsetHeight;
     cells.forEach(c => {
       c.style.transition = '';
     });
     grid.style.pointerEvents = 'none';
+
+    // Restore header/footer
+    header.style.transition = '';
+    header.style.opacity = '';
+    footer.style.transition = '';
+    footer.style.opacity = '';
     running = false;
   }
 
   function run(callback) {
-    // Prevent double-running
     if (running) {
       cleanup();
       if (callback) callback();
@@ -59,7 +68,13 @@ const Transitions = (() => {
       const blackoutOrder = randomOrder();
       const revealOrder = randomOrder();
 
-      // Phase 1: Blackout
+      // Header/footer: soft fade out during blackout
+      header.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
+      footer.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
+      header.style.opacity = '0';
+      footer.style.opacity = '0';
+
+      // Phase 1: Blackout (content area only)
       blackoutOrder.forEach((idx, i) => {
         setTimeout(() => {
           if (!running) return;
@@ -76,10 +91,16 @@ const Transitions = (() => {
         // Execute callback while screen is black
         if (callback) callback();
 
+        // Header/footer: soft fade back in during reveal
+        header.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
+        footer.style.transition = `opacity ${HEADER_FADE_MS}ms ease`;
+        header.style.opacity = '1';
+        footer.style.opacity = '1';
+
         setTimeout(() => {
           if (!running) { resolve(); return; }
 
-          // Phase 2: Reveal
+          // Phase 2: Reveal (content area)
           revealOrder.forEach((idx, i) => {
             setTimeout(() => {
               if (!running) return;
@@ -97,7 +118,7 @@ const Transitions = (() => {
         }, BLACK_PAUSE_MS);
       }, blackoutDuration);
 
-      // Safety timeout — force cleanup if stuck
+      // Safety timeout
       const totalMax = blackoutDuration + BLACK_PAUSE_MS +
                        CELLS * REVEAL_STAGGER_MS + REVEAL_FADE_MS + 500;
       setTimeout(() => {
